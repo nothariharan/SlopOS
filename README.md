@@ -6,8 +6,6 @@ A fake desktop operating system that runs entirely in your browser. No install, 
 
 ![SlopOS banner](images/banner.png)
 
-> Images live in the `images/` folder locally. They are gitignored, so after cloning you will need your own copies (or grab them from whoever shipped you this).
-
 ---
 
 ## what is this
@@ -21,8 +19,7 @@ We built it as a fun experiment — part portfolio piece, part "what if an OS wa
 ## try it
 
 1. Clone the repo
-2. Drop the image assets into `images/` (see below)
-3. Open `index.html` in a browser
+2. Open `index.html` in a browser
 
 That is it. No build step, no npm install, no webpack config to cry over.
 
@@ -75,7 +72,7 @@ SlopOS/
 ├── index.html      # markup, windows, desktop layout
 ├── styles.css      # all the neon purple chaos
 ├── script.js       # logic, drag, storage, animations
-└── images/         # assets (gitignored)
+└── images/         # assets
     ├── bg.jpg          # desktop wallpaper
     ├── paper.png       # crumpled paper texture for feedback files
     ├── banner.png      # readme / promo image
@@ -116,21 +113,6 @@ Five PNG frames cycle on a timer. When you ask a question, the input hides, he c
 
 ### styling vibe
 Comic Sans, neon green text, magenta borders, glassy header bar, Windows-style error dialog that runs away when you try to click OK. The aesthetic is intentional. We are not sorry.
-
----
-
-## image setup
-
-The `images/` folder is gitignored. You need these files for the full experience:
-
-| file | used for |
-|------|----------|
-| `images/bg.jpg` | desktop background |
-| `images/paper.png` | feedback paper window texture |
-| `images/frames/c1.png` – `c5.png` | clippy idle animation |
-| `images/banner.png` | optional, for docs / promo |
-
-Without them the OS still runs — you just get broken images and a plain background.
 
 ---
 
