@@ -1,0 +1,5 @@
+# local image assets (not tracked — add your own in images/)
+images/
+
+# editor / tooling
+.wakatime-project

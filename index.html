@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>SlopOS</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <!-- top bar, just os name + clock -->
+  <div class="header">
+    <p class="os-name" id="welcomeopen">SlopOS</p>
+    <p class="clock" id="timeElement">...</p>
+  </div>
+
+  <!-- desktop icons - drag them anywhere -->
+  <div class="icons" id="icons">
+    <div class="icon" id="welcomeDesktopOpen">
+      <div class="icon-img">💾</div>
+      <p class="icon-text">Welcome.slop</p>
+    </div>
+    <div class="icon" id="feedbackOpen">
+      <div class="icon-img">👄</div>
+      <p class="icon-text">Feedback.slop</p>
+    </div>
+    <div class="icon decoy-icon" id="trashOpen">
+      <div class="icon-img">🗑️</div>
+      <p class="icon-text">Trash.slop</p>
+    </div>
+    <div class="icon decoy-icon" id="aiOpen">
+      <div class="icon-img">🤖</div>
+      <p class="icon-text">AI.exe</p>
+    </div>
+    <div class="icon decoy-icon" id="memesOpen">
+      <div class="icon-img">🐸</div>
+      <p class="icon-text">Memes.dll</p>
+    </div>
+  </div>
+
+  <!-- welcome window -->
+  <div class="window" id="welcome" style="top: calc(50% - 220px); left: calc(50% - 260px);">
+    <div class="win-top" id="welcomeheader">
+      <p class="win-title">Welcome.slop</p>
+      <div class="close-btn" id="welcomeclose"></div>
+    </div>
+
+    <div class="win-body">
+      <h1>Welcome to SlopOS v0.0.0.67</h1>
+
+      <!-- typing name one letter at a time -->
+      <div id="nameEntryBit">
+
+        <p class="ask">
+          ok so... what should we call you??
+          <br>
+          <span class="ask-small">drag the bar to pick each letter. like volume but worse.</span>
+        </p>
+
+        <div class="name-box">
+          <span class="name-label">name so far:</span>
+          <span class="name-text" id="nameSoFar">_</span>
+        </div>
+
+        <div class="picker">
+          <p class="picker-text">current letter:</p>
+          <div class="picker-row">
+            <div class="letter-big" id="letterPreview">A</div>
+            <button type="button" class="btn btn-charset" id="charsetBtn">lower case</button>
+          </div>
+          <input type="range" id="letterBar" class="letter-slider" min="0" max="26" value="0">
+          <div class="slider-labels">
+            <span id="sliderStart">A</span>
+            <span id="sliderMid">space</span>
+            <span id="sliderEnd">Z</span>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button type="button" class="btn" id="addLetterBtn">add that letter</button>
+          <button type="button" class="btn btn-back" id="undoLetterBtn">undo last one</button>
+        </div>
+
+        <button type="button" class="btn btn-go" id="bootBtn" disabled>boot me in</button>
+
+        <p class="tiny-note">max 14 chars. spaces ok.</p>
+      </div>
+
+      <!-- after they boot in -->
+      <div id="nameDoneBit" class="done-box" style="display: none;">
+        <p class="done-title">welcome aboard, <strong id="finalNameShow"></strong>.</p>
+        <p class="done-small">you are now slop-certified. nice.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- feedback app - the mouth eats your thoughts -->
+  <div class="window window-wide" id="feedback" style="display: none; top: calc(50% - 200px); left: calc(50% - 210px);">
+    <div class="win-top" id="feedbackheader">
+      <p class="win-title">Feedback.slop</p>
+      <div class="close-btn" id="feedbackclose"></div>
+    </div>
+    <div class="win-body feedback-body">
+      <h2 class="feed-title">Feed me suggestions</h2>
+      <p class="feed-ask">What do you think?</p>
+
+      <div class="mouth" id="mouth">
+        <div class="teeth-top">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="mouth-hole" id="mouthHole">
+          <p class="mouth-hint" id="mouthHint">click here to open mouth & type</p>
+          <textarea class="mouth-input" id="feedbackText" placeholder="type your slop here..." rows="4"></textarea>
+        </div>
+        <div class="teeth-bottom">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="tongue"></div>
+      </div>
+
+      <button type="button" class="btn btn-go feed-btn" id="feedBtn" style="display: none;">feed it to the mouth</button>
+
+      <p class="feed-done" id="feedDone" style="display: none;">feedback eaten!</p>
+    </div>
+  </div>
+
+  <!-- cookie banner lol -->
+  <div class="cookie-box" id="cookieBox">
+    <p class="cookie-text">this OS uses cookies and biscuits bro do u care?</p>
+    <div class="cookie-btns">
+      <button type="button" class="cookie-btn" id="cookieYes">yeah ofc</button>
+      <button type="button" class="cookie-btn cookie-btn-no" id="cookieNo">ofc no bro 😍</button>
+    </div>
+  </div>
+
+  <!-- fake bg button. it does nothing. trust me -->
+  <button type="button" class="bg-btn" id="changeBgBtn">change b4ckgrond</button>
+
+  <!-- windows style error, hidden until you suffer enough -->
+  <div class="err-overlay" id="bgErrOverlay" style="display: none;">
+    <div class="err-box" id="errBox">
+      <div class="err-title">
+        <span>SlopOS - Background Changer</span>
+        <button type="button" class="err-x" id="errCloseX">×</button>
+      </div>
+      <div class="err-inner">
+        <div class="err-icon">✕</div>
+        <p class="err-msg" id="errMsg">bro enough it doesnt work 🥀</p>
+      </div>
+      <div class="err-foot">
+        <button type="button" class="err-ok" id="errOkBtn">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- saved feedback opens on crumpled paper -->
+  <div class="window paper-win" id="paperWin" style="display: none; top: calc(50% - 210px); left: calc(50% - 260px);">
+    <div class="win-top" id="paperWinheader">
+      <p class="win-title" id="paperWinTitle">feedback1</p>
+      <div class="close-btn" id="paperWinclose"></div>
+    </div>
+    <div class="win-body paper-body">
+      <div class="paper-sheet">
+        <p class="paper-text" id="paperWinText"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- slop clippy - useless ai assistant -->
+  <div class="clippy-box" id="clippyBox">
+    <div class="clippy-bubble">
+      <p class="clippy-msg" id="clippyMsg">yo any doubt? ask me fam!</p>
+      <div class="clippy-ask" id="clippyAsk">
+        <input type="text" class="clippy-input" id="clippyInput" placeholder="ask something...">
+        <button type="button" class="clippy-btn" id="clippyBtn">ask</button>
+      </div>
+    </div>
+    <img class="clippy-img" id="clippyImg" src="images/frames/c1.png" alt="">
+  </div>
+
+  <!-- right-click menu for desktop icons -->
+  <div class="icon-menu" id="iconMenu" style="display: none;">
+    <button type="button" class="icon-menu-btn" id="iconMenuDelete">delete</button>
+  </div>
+
+  <!-- spin wheel for delete yes/no -->
+  <div class="spin-overlay" id="spinOverlay" style="display: none;">
+    <div class="spin-box">
+      <p class="spin-label">delete or duplicate?? spin to find out</p>
+      <div class="spin-wrap">
+        <div class="spin-pointer"></div>
+        <div class="spin-wheel" id="spinWheel">
+          <div class="wheel-slice wheel-yes">yes</div>
+          <div class="wheel-slice wheel-no">no</div>
+        </div>
+      </div>
+      <p class="spin-result" id="spinResult"></p>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+
+</body>
+
+</html>
