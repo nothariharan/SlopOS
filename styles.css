@@ -1,4 +1,4 @@
-/* desktop bg - drop bg.jpg in images/ */
+/* bg */
 body {
   margin: 0;
   height: 100vh;
@@ -8,48 +8,171 @@ body {
   background: #1a0a2e url('images/bg.jpg') center / cover no-repeat;
 }
 
-/* header bar */
-.header {
-  position: absolute;
-  top: 0;
+/* taskbar */
+.taskbar {
+  position: fixed;
+  bottom: 0;
   left: 0;
   width: 100%;
+  height: 42px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px 16px;
+  gap: 6px;
+  padding: 0 8px;
   box-sizing: border-box;
-  background: rgba(20, 10, 35, 0.8);
-  backdrop-filter: blur(10px);
-  border-bottom: 2px solid #ff00ff;
+  background: linear-gradient(to bottom, #3a8fd9 0%, #2369b5 8%, #ece9d8 8%, #d4d0c8 100%);
+  border-top: 2px solid #ff00ff;
   z-index: 100;
+  font-family: Tahoma, Arial, sans-serif;
 }
 
-.os-name {
-  margin: 0;
-  padding: 6px 14px;
-  border-radius: 14px;
-  background: rgba(255, 0, 255, 0.3);
-  color: #ff00ff;
+.start-btn {
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-size: 13px;
   font-weight: bold;
+  padding: 4px 14px;
+  border: 2px solid #2369b5;
+  border-radius: 4px;
+  background: linear-gradient(to bottom, #5cb85c, #3d8b3d);
+  color: #fff;
+  cursor: pointer;
+  text-transform: lowercase;
+}
+
+.start-btn:hover {
+  filter: brightness(1.08);
+}
+
+.start-btn.start-open {
+  background: linear-gradient(to bottom, #ff00ff, #cc00cc);
+  border-color: #990099;
+}
+
+.taskbar-apps {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 0 4px;
+}
+
+.task-btn {
+  font-family: Tahoma, Arial, sans-serif;
+  font-size: 11px;
+  padding: 4px 10px;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 1px solid #888;
+  border-radius: 3px;
+  background: linear-gradient(to bottom, #fff, #d4d0c8);
+  cursor: pointer;
+  color: #000;
+}
+
+.task-btn:hover {
+  background: linear-gradient(to bottom, #fff, #ece9d8);
+}
+
+.task-btn.task-pressed {
+  background: #1a5490;
+  color: #fff;
+  border-color: #0d3a6b;
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.task-btn.task-active {
+  background: linear-gradient(to bottom, #7eb4ea, #4a8fd4);
+  border-color: #2369b5;
+}
+
+.system-tray {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px inset #888;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+}
+
+.tray-icon {
+  font-size: 14px;
   cursor: pointer;
   user-select: none;
 }
 
-.os-name:hover {
-  background: rgba(255, 0, 255, 0.5);
+.tray-icon:hover {
+  transform: scale(1.15);
 }
 
-.clock {
-  margin: 0;
-  padding: 6px 14px;
-  border-radius: 14px;
-  background: rgba(0, 255, 255, 0.2);
-  color: #00ffff;
-  font-size: 14px;
+.tray-clock {
+  font-size: 11px;
+  color: #000;
+  padding: 2px 6px;
+  white-space: nowrap;
 }
 
-/* icons on desktop - free drag placement */
+/* start menu */
+.start-menu {
+  position: fixed;
+  bottom: 44px;
+  left: 4px;
+  width: 200px;
+  padding: 8px 0;
+  background: #fff;
+  border: 2px solid #ff00ff;
+  border-radius: 6px;
+  box-shadow: 3px 3px 12px rgba(0, 0, 0, 0.35);
+  z-index: 110;
+}
+
+.start-menu-title {
+  margin: 0 0 6px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #2369b5;
+  border-bottom: 1px solid #ccc;
+  font-family: Tahoma, Arial, sans-serif;
+}
+
+.start-menu-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.start-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: Tahoma, Arial, sans-serif;
+  font-size: 12px;
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #000;
+}
+
+.start-item:hover {
+  background: #316ac5;
+  color: #fff;
+}
+
+.start-item-broken {
+  color: #888;
+}
+
+.start-item-broken:hover {
+  background: #ccc;
+  color: #666;
+}
+
+/* desktop icons */
 .icons {
   position: absolute;
   top: 0;
@@ -62,7 +185,7 @@ body {
 
 .icon {
   position: absolute;
-  width: 70px;
+  width: 78px;
   text-align: center;
   cursor: grab;
   user-select: none;
@@ -73,18 +196,37 @@ body {
   cursor: grabbing;
 }
 
-.icon:hover .icon-img {
-  border-color: #ff00ff;
-  box-shadow: 0 0 8px rgba(255, 0, 255, 0.45);
+.icon-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 7px 6px 5px;
+  border-radius: 3px;
+  background: rgba(20, 8, 38, 0.82);
+  border: 2px solid #ff00ff;
+  box-shadow:
+    2px 2px 0 #00ff88,
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  box-sizing: border-box;
+  transform: rotate(-0.6deg);
+}
+
+.icon:hover .icon-box {
+  border-color: #00ff88;
+  background: rgba(30, 12, 52, 0.9);
+  box-shadow:
+    3px 3px 0 #ff00ff,
+    0 0 10px rgba(255, 0, 255, 0.45);
+  transform: rotate(0.4deg) scale(1.04);
 }
 
 .icon-img {
-  width: 46px;
-  height: 46px;
+  width: 40px;
+  height: 40px;
   margin: 0 auto;
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px dashed rgba(0, 255, 136, 0.55);
+  border-radius: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -93,10 +235,58 @@ body {
 }
 
 .icon-text {
-  margin: 4px 0 0;
+  margin: 5px 0 0;
   font-size: 11px;
   color: #fff;
   text-shadow: 1px 1px 2px #000;
+  line-height: 1.15;
+  word-break: break-word;
+  max-width: 100%;
+  font-weight: bold;
+}
+
+.cookie-icon .icon-box {
+  border-color: #d4a017;
+  background: rgba(50, 35, 8, 0.88);
+  box-shadow:
+    2px 2px 0 #f5deb3,
+    inset 0 0 0 1px rgba(255, 220, 150, 0.2);
+}
+
+.icon.crumbing {
+  pointer-events: none;
+}
+
+.icon.crumbing .icon-box {
+  animation: cookie-crumb 0.7s ease-in forwards;
+}
+
+.icon.crumbing .icon-text {
+  animation: cookie-crumb-text 0.35s ease-in forwards;
+}
+
+@keyframes cookie-crumb {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+
+  35% {
+    transform: scale(1.12) rotate(-10deg);
+  }
+
+  100% {
+    transform: scale(0.15) rotate(24deg) translateY(14px);
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+
+@keyframes cookie-crumb-text {
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
 }
 
 /* windows */
@@ -132,9 +322,55 @@ body {
 
 .win-title {
   margin: 0;
+  flex: 1;
   color: #ffff00;
   font-size: 14px;
   font-weight: bold;
+}
+
+.win-btns {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.win-btn {
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.win-min {
+  background: #f4c430;
+}
+
+.win-min:hover {
+  background: #ffdd55;
+}
+
+.win-max {
+  background: #5cb85c;
+}
+
+.win-max:hover {
+  background: #7dd87d;
+}
+
+.win-close {
+  background: #ec6b5e;
+}
+
+.win-close:hover {
+  background: #ff5555;
+}
+
+.win-maxed .win-title::after {
+  content: " (maximized??)";
+  font-size: 10px;
+  color: #00ff88;
 }
 
 .close-btn {
@@ -367,6 +603,72 @@ body {
   margin-top: 14px;
 }
 
+/* mouth name bubble after chew */
+.mouth-wrap {
+  position: relative;
+  margin: 0 auto;
+  max-width: 380px;
+}
+
+.mouth-name-bubble {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  width: min(100%, 260px);
+  padding: 10px 12px;
+  background: #fff9c4;
+  border: 3px solid #ff00ff;
+  border-radius: 12px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.25);
+  z-index: 5;
+  box-sizing: border-box;
+}
+
+.mouth-name-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  margin-left: -10px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #ff00ff;
+}
+
+.mouth-name-msg {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #1a0a2e;
+  font-weight: bold;
+  line-height: 1.3;
+}
+
+.mouth-name-row {
+  display: flex;
+  gap: 6px;
+}
+
+.mouth-name-input {
+  flex: 1;
+  min-width: 0;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 8px;
+  border: 2px solid #00ff88;
+  border-radius: 8px;
+  background: #fff;
+  color: #1a0a2e;
+}
+
+.mouth-name-save {
+  font-size: 12px;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+
 .feed-done {
   margin: 16px 0 0;
   font-size: 22px;
@@ -470,7 +772,7 @@ body {
   margin: 0 auto 6px;
 }
 
-/* chewing - jaws chomp chomp */
+/* chewing jaws */
 @keyframes chomp-top {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(10px); }
@@ -500,7 +802,7 @@ body {
 /* cookie banner - full red bar at bottom */
 .cookie-box {
   position: fixed;
-  bottom: 0;
+  bottom: 42px;
   left: 0;
   width: 100%;
   z-index: 80;
@@ -550,7 +852,7 @@ body {
 /* bottom right decoy button */
 .bg-btn {
   position: fixed;
-  bottom: 20px;
+  bottom: 58px;
   right: 20px;
   z-index: 50;
   font-family: inherit;
@@ -678,7 +980,7 @@ body {
 /* slop clippy - bottom right useless helper */
 .clippy-box {
   position: fixed;
-  bottom: 90px;
+  bottom: 128px;
   right: 16px;
   z-index: 85;
   display: flex;
@@ -835,6 +1137,36 @@ body {
 
 .icon-menu-btn:hover {
   background: #ddd;
+}
+
+.desktop-menu {
+  position: fixed;
+  z-index: 90;
+  min-width: 150px;
+  padding: 4px;
+  background: #fff;
+  border: 2px solid #ff00ff;
+  border-radius: 6px;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.desktop-menu-btn {
+  display: block;
+  width: 100%;
+  font-family: Tahoma, Arial, sans-serif;
+  font-size: 12px;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #ece9d8;
+  cursor: pointer;
+  text-align: left;
+  color: #000;
+}
+
+.desktop-menu-btn:hover {
+  background: #316ac5;
+  color: #fff;
 }
 
 /* delete spin wheel overlay */
