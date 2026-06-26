@@ -185,7 +185,8 @@ body {
 
 .icon {
   position: absolute;
-  width: 78px;
+  min-width: 78px;
+  width: max-content;
   text-align: center;
   cursor: grab;
   user-select: none;
@@ -240,8 +241,7 @@ body {
   color: #fff;
   text-shadow: 1px 1px 2px #000;
   line-height: 1.15;
-  word-break: break-word;
-  max-width: 100%;
+  white-space: nowrap;
   font-weight: bold;
 }
 
@@ -365,6 +365,23 @@ body {
 
 .win-close:hover {
   background: #ff5555;
+}
+
+.win-help {
+  background: #3a8fd9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  color: #fff;
+  font-family: monospace;
+  line-height: 14px;
+  text-align: center;
+}
+
+.win-help:hover {
+  background: #5fa8e9;
 }
 
 .win-maxed .win-title::after {
@@ -869,6 +886,33 @@ body {
   background: rgba(255, 0, 255, 0.3);
 }
 
+/* top right organize button */
+.organize-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 50;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: bold;
+  padding: 10px 20px;
+  border: 3px solid #000;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ff007f 0%, #7f00ff 50%, #00f0ff 100%);
+  color: #fff;
+  text-shadow: 1px 1px 3px #000;
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(255, 0, 127, 0.6), 4px 4px 0 #00ff88;
+  text-transform: lowercase;
+  transition: all 0.2s ease-in-out;
+}
+
+.organize-btn:hover {
+  background: linear-gradient(135deg, #00f0ff 0%, #ff007f 50%, #7f00ff 100%);
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.9), 4px 4px 0 #ff00ff;
+  transform: scale(1.05) rotate(-1deg);
+}
+
 /* classic windows xp error popup */
 .err-overlay {
   position: fixed;
@@ -1258,4 +1302,401 @@ body {
   font-size: 15px;
   font-weight: bold;
 }
+
+/* game window styles */
+.window-game {
+  width: 278px !important;
+  background: #c0c0c0 !important; /* retro grey! */
+  color: #000 !important;
+  border: 3px solid #ff00ff !important; /* still keeps the neon boundary */
+}
+
+.window-game .win-title {
+  color: #fff !important;
+  font-family: Tahoma, Arial, sans-serif !important;
+}
+
+.window-game .win-top {
+  background: linear-gradient(90deg, #000080, #1084d0) !important; /* classic blue header */
+}
+
+.game-body {
+  padding: 6px;
+  background: #c0c0c0;
+  font-family: monospace;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px;
+  border: 2px inset #fff;
+  background: #c0c0c0;
+  margin-bottom: 6px;
+}
+
+.mine-counter, .timer {
+  background: #000;
+  color: #ff0000;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 22px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border: 2px inset #808080;
+  min-width: 44px;
+  text-align: right;
+  letter-spacing: 1px;
+  user-select: none;
+}
+
+.smiley-btn {
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #c0c0c0;
+  border: 2px outset #fff;
+  cursor: pointer;
+  padding: 0;
+  user-select: none;
+  outline: none;
+}
+
+.smiley-btn:active {
+  border: 2px inset #fff;
+}
+
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 28px);
+  grid-template-rows: repeat(9, 28px);
+  gap: 1px;
+  border: 3px inset #fff;
+  background: #808080;
+  padding: 2px;
+  user-select: none;
+}
+
+.game-cell {
+  width: 28px;
+  height: 28px;
+  background: #c0c0c0;
+  border: 2.5px outset #fff;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.game-cell.revealed {
+  border: 1px solid #808080;
+  background: #c0c0c0;
+  cursor: default;
+}
+
+.game-cell.mine {
+  background: #ff0000;
+}
+
+/* mine color code hints */
+.game-cell[data-count="1"] { color: blue; }
+.game-cell[data-count="2"] { color: green; }
+.game-cell[data-count="3"] { color: red; }
+.game-cell[data-count="4"] { color: darkblue; }
+.game-cell[data-count="5"] { color: darkred; }
+.game-cell[data-count="6"] { color: teal; }
+.game-cell[data-count="7"] { color: black; }
+.game-cell[data-count="8"] { color: gray; }
+
+.game-cell.sloppy-text {
+  font-size: 10px;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  letter-spacing: -0.5px;
+}
+
+/* slop paint styling */
+.window-paint {
+  width: 342px !important;
+  background: #c0c0c0 !important;
+  color: #000 !important;
+  border: 3px solid #ff00ff !important;
+}
+
+.window-paint .win-title {
+  color: #fff !important;
+  font-family: Tahoma, Arial, sans-serif !important;
+}
+
+.window-paint .win-top {
+  background: linear-gradient(90deg, #800080, #ff00ff) !important; /* purple gradient header */
+}
+
+.paint-body {
+  padding: 6px;
+  background: #c0c0c0;
+}
+
+.paint-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 6px;
+  background: #c0c0c0;
+  border: 2px inset #fff;
+  padding: 4px;
+}
+
+.paint-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tool-btn {
+  font-size: 14px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #c0c0c0;
+  border: 2px outset #fff;
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+}
+
+.tool-btn:active, .tool-btn.active-tool {
+  border: 2px inset #fff;
+  background: #d4d0c8;
+}
+
+.paint-action-btn {
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 3px 10px;
+  background: #c0c0c0;
+  border: 2px outset #fff;
+  cursor: pointer;
+  outline: none;
+}
+
+.paint-action-btn:active {
+  border: 2px inset #fff;
+}
+
+.paint-colors {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-start;
+}
+
+.color-swatch {
+  width: 18px;
+  height: 18px;
+  border: 2px outset #fff;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.color-swatch.active-color {
+  border: 2px inset #000;
+  outline: 1px solid #fff;
+}
+
+.canvas-container {
+  border: 3px inset #fff;
+  background: #808080;
+  display: block;
+  overflow: hidden;
+  width: 320px;
+  height: 240px;
+}
+
+#paintCanvas {
+  background: #ffffff;
+  display: block;
+  cursor: crosshair;
+}
+
+/* memes window styling */
+.window-memes {
+  width: 400px !important;
+  background: #c0c0c0 !important;
+  color: #000 !important;
+  border: 3px solid #ff00ff !important;
+}
+
+.window-memes .win-title {
+  color: #fff !important;
+  font-family: Tahoma, Arial, sans-serif !important;
+}
+
+.window-memes .win-top {
+  background: linear-gradient(90deg, #008080, #00ffc8) !important; /* teal gradient header */
+}
+
+.memes-body {
+  padding: 8px;
+  background: #c0c0c0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.meme-display {
+  background: #000;
+  border: 3px inset #fff;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.meme-container {
+  position: relative;
+  max-width: 100%;
+  display: inline-block;
+  overflow: hidden;
+}
+
+#memeImg {
+  max-width: 100%;
+  max-height: 280px;
+  display: block;
+  margin: 0 auto;
+}
+
+.meme-text {
+  position: absolute;
+  left: 5%;
+  width: 90%;
+  text-align: center;
+  color: #ffffff;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  text-transform: uppercase;
+  word-wrap: break-word;
+  line-height: 1.15;
+  user-select: none;
+  pointer-events: none;
+  text-shadow:
+    -2px -2px 0 #000,  
+     2px -2px 0 #000,
+    -2px  2px 0 #000,
+     2px  2px 0 #000,
+    -2px  0px 0 #000,
+     2px  0px 0 #000,
+     0px -2px 0 #000,
+     0px  2px 0 #000;
+}
+
+.meme-text-top {
+  top: 8px;
+}
+
+.meme-text-bottom {
+  bottom: 8px;
+}
+
+.meme-watermark {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: monospace;
+  text-shadow: 1px 1px 1px #000;
+  user-select: none;
+  pointer-events: none;
+}
+
+.meme-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.meme-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.meme-input-group input {
+  padding: 6px;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-size: 12px;
+  border: 2px inset #fff;
+  background: #fff;
+  color: #000;
+  outline: none;
+}
+
+.meme-btn-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.meme-customizer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #c0c0c0;
+  border: 2px inset #fff;
+  padding: 8px;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-size: 11px;
+}
+
+.meme-control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.meme-control-row label {
+  flex: 1;
+  white-space: nowrap;
+  color: #000 !important;
+  text-shadow: none !important;
+}
+
+.meme-control-row input[type="range"] {
+  flex: 1.5;
+  cursor: pointer;
+}
+
+.meme-colors-row {
+  justify-content: flex-start;
+  gap: 20px;
+  margin-top: 4px;
+}
+
+.color-picker-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.color-picker-wrap input[type="color"] {
+  border: 1px solid #888;
+  background: none;
+  width: 28px;
+  height: 22px;
+  padding: 0;
+  cursor: pointer;
+}
+
 

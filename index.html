@@ -34,10 +34,22 @@
         <p class="icon-text">AI.exe</p>
       </div>
     </div>
-    <div class="icon decoy-icon" id="memesOpen">
+    <div class="icon" id="memesOpen">
       <div class="icon-box">
         <div class="icon-img">🐸</div>
         <p class="icon-text">Memes.dll</p>
+      </div>
+    </div>
+    <div class="icon" id="slopsweeperOpen">
+      <div class="icon-box">
+        <div class="icon-img">💣</div>
+        <p class="icon-text">Slopsweeper.exe</p>
+      </div>
+    </div>
+    <div class="icon" id="sloppypaintOpen">
+      <div class="icon-box">
+        <div class="icon-img">🎨</div>
+        <p class="icon-text">SlopPaint.exe</p>
       </div>
     </div>
   </div>
@@ -157,6 +169,9 @@
     </div>
   </div>
 
+  <!-- Organize Icons Button in top right -->
+  <button type="button" class="organize-btn" id="organizeIconsBtn">organize</button>
+
   <!-- fake bg button. it does nothing. trust me -->
   <button type="button" class="bg-btn" id="changeBgBtn">change b4ckgrond</button>
 
@@ -194,6 +209,122 @@
     </div>
   </div>
 
+  <!-- slopsweeper window -->
+  <div class="window window-game" id="slopsweeper" style="display: none; top: calc(50% - 220px); left: calc(50% - 150px);">
+    <div class="win-top" id="slopsweeperheader">
+      <p class="win-title">Slopsweeper.exe</p>
+      <div class="win-btns">
+        <button type="button" class="win-btn win-help" id="slopsweeperHelp" title="help">?</button>
+        <button type="button" class="win-btn win-min" data-win="slopsweeper" title="minimize"></button>
+        <button type="button" class="win-btn win-max" data-win="slopsweeper" title="maximize??"></button>
+        <button type="button" class="win-btn win-close" data-win="slopsweeper" title="close"></button>
+      </div>
+    </div>
+    <div class="win-body game-body">
+      <div class="game-header">
+        <div class="mine-counter" id="mineCounter">010</div>
+        <button type="button" class="smiley-btn" id="smileyBtn">🙂</button>
+        <div class="timer" id="gameTimer">000</div>
+      </div>
+      <div class="game-grid" id="mineGrid"></div>
+    </div>
+  </div>
+
+  <!-- sloppypaint window -->
+  <div class="window window-paint" id="sloppypaint" style="display: none; top: calc(50% - 200px); left: calc(50% - 170px);">
+    <div class="win-top" id="sloppypaintheader">
+      <p class="win-title">SlopPaint.exe</p>
+      <div class="win-btns">
+        <button type="button" class="win-btn win-min" data-win="sloppypaint" title="minimize"></button>
+        <button type="button" class="win-btn win-max" data-win="sloppypaint" title="maximize??"></button>
+        <button type="button" class="win-btn win-close" data-win="sloppypaint" title="close"></button>
+      </div>
+    </div>
+    <div class="win-body paint-body">
+      <div class="paint-controls">
+        <div class="paint-tools">
+          <button type="button" class="tool-btn active-tool" id="toolBrush" title="Brush">🖌️</button>
+          <button type="button" class="tool-btn" id="toolEraser" title="Cursed Eraser">🧽</button>
+          <button type="button" class="paint-action-btn" id="paintClear">clear</button>
+          <button type="button" class="paint-action-btn" id="paintSave">save</button>
+        </div>
+        <div class="paint-colors">
+          <span class="color-swatch active-color" style="background-color: #ff0055;" data-color="#ff0055"></span>
+          <span class="color-swatch" style="background-color: #ffaa00;" data-color="#ffaa00"></span>
+          <span class="color-swatch" style="background-color: #ffea00;" data-color="#ffea00"></span>
+          <span class="color-swatch" style="background-color: #00ff66;" data-color="#00ff66"></span>
+          <span class="color-swatch" style="background-color: #00ffff;" data-color="#00ffff"></span>
+          <span class="color-swatch" style="background-color: #0088ff;" data-color="#0088ff"></span>
+          <span class="color-swatch" style="background-color: #ff00ff;" data-color="#ff00ff"></span>
+          <span class="color-swatch" style="background-color: #000000;" data-color="#000000"></span>
+        </div>
+      </div>
+      <div class="canvas-container">
+        <canvas id="paintCanvas" width="320" height="240"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- memes window -->
+  <div class="window window-memes" id="memesWin" style="display: none; top: calc(50% - 210px); left: calc(50% - 220px);">
+    <div class="win-top" id="memesWinheader">
+      <p class="win-title">Memes.dll</p>
+      <div class="win-btns">
+        <button type="button" class="win-btn win-min" data-win="memesWin" title="minimize"></button>
+        <button type="button" class="win-btn win-max" data-win="memesWin" title="maximize??"></button>
+        <button type="button" class="win-btn win-close" data-win="memesWin" title="close"></button>
+      </div>
+    </div>
+    <div class="win-body memes-body">
+      <div class="meme-display">
+        <div class="meme-container" id="memeContainer">
+          <img id="memeImg" src="" alt="Meme Template Loading...">
+          <div class="meme-text meme-text-top" id="memeTextTop"></div>
+          <div class="meme-text meme-text-bottom" id="memeTextBottom"></div>
+          <div class="meme-watermark">made with slop</div>
+        </div>
+      </div>
+      <div class="meme-controls">
+        <div class="meme-input-group">
+          <input type="text" id="memeInputTop" placeholder="top text..." maxlength="60">
+          <input type="text" id="memeInputBottom" placeholder="bottom text..." maxlength="60">
+        </div>
+        <div class="meme-customizer">
+          <div class="meme-control-row">
+            <label for="memeSizeTop">Top Size: <span id="valSizeTop">24px</span></label>
+            <input type="range" id="memeSizeTop" min="12" max="64" value="24">
+          </div>
+          <div class="meme-control-row">
+            <label for="memePosTop">Top Offset: <span id="valPosTop">8px</span></label>
+            <input type="range" id="memePosTop" min="0" max="150" value="8">
+          </div>
+          <div class="meme-control-row">
+            <label for="memeSizeBottom">Bottom Size: <span id="valSizeBottom">24px</span></label>
+            <input type="range" id="memeSizeBottom" min="12" max="64" value="24">
+          </div>
+          <div class="meme-control-row">
+            <label for="memePosBottom">Bottom Offset: <span id="valPosBottom">8px</span></label>
+            <input type="range" id="memePosBottom" min="0" max="150" value="8">
+          </div>
+          <div class="meme-control-row meme-colors-row">
+            <div class="color-picker-wrap">
+              <label for="memeTextColor">Text Color:</label>
+              <input type="color" id="memeTextColor" value="#ffffff">
+            </div>
+            <div class="color-picker-wrap">
+              <label for="memeOutlineColor">Stroke:</label>
+              <input type="color" id="memeOutlineColor" value="#000000">
+            </div>
+          </div>
+        </div>
+        <div class="meme-btn-group">
+          <button type="button" class="btn" id="memeDownloadBtn">download meme</button>
+          <button type="button" class="btn" id="memeNextBtn">next template</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- clippy -->
   <div class="clippy-box" id="clippyBox">
     <div class="clippy-bubble">
@@ -227,6 +358,8 @@
       <button type="button" class="start-item" data-app="trash">Trash.slop</button>
       <button type="button" class="start-item" data-app="ai">AI.exe</button>
       <button type="button" class="start-item" data-app="memes">Memes.dll</button>
+      <button type="button" class="start-item" data-app="slopsweeper">Slopsweeper.exe</button>
+      <button type="button" class="start-item" data-app="sloppypaint">SlopPaint.exe</button>
       <button type="button" class="start-item start-item-broken" data-app="updates">Slop Updates</button>
     </div>
   </div>

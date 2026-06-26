@@ -5,6 +5,10 @@ var feedbackOpen = document.getElementById("feedbackOpen");
 var clockEl = document.querySelector("#timeElement");
 var taskbarApps = document.getElementById("taskbarApps");
 var taskbarH = 48;
+var slopsweeperWin = document.getElementById("slopsweeper");
+var organizeIconsBtn = document.getElementById("organizeIconsBtn");
+var sloppypaintWin = document.getElementById("sloppypaint");
+var memesWin = document.getElementById("memesWin");
 
 // leftover from when we tried lucide icons lol
 var iconToEmoji = {
@@ -151,7 +155,10 @@ function ensureTaskbarBtn(id) {
   btn.addEventListener("click", function() {
     if (win.minimized) {
       restoreWindow(win.el);
+    } else if (activeWinId === id) {
+      minimizeWindow(win.el);
     } else {
+      restoreWindow(win.el);
       bringToFront(win.el);
       setActiveWin(id);
     }
@@ -212,6 +219,18 @@ function closeWindow(el) {
   if (win) {
     win.maximized = false;
   }
+
+  // stop game timer if they close the game, save CPU for more slop
+  if (id === "slopsweeper") {
+    clearInterval(slopsweeperTimer);
+    slopsweeperTimer = null;
+  }
+
+  // stop gravity drip timer on close
+  if (id === "sloppypaint") {
+    clearInterval(slopPaintDripTimer);
+    slopPaintDripTimer = null;
+  }
 }
 
 function openWindow(el, titleOverride) {
@@ -247,6 +266,11 @@ function minimizeWindow(el) {
   if (activeWinId === id) {
     activeWinId = null;
   }
+
+  // nuke the glitch trail if we had one. clean up our slop.
+  document.querySelectorAll(".glitch-trail-" + id).forEach(function(trailEl) {
+    trailEl.remove();
+  });
 }
 
 function restoreWindow(el) {
@@ -328,6 +352,9 @@ function wireWinControls() {
 registerWindow("welcome", "Welcome.slop");
 registerWindow("feedback", "Feedback.slop");
 registerWindow("paperWin", "feedback1");
+registerWindow("slopsweeper", "Slopsweeper.exe");
+registerWindow("sloppypaint", "SlopPaint.exe");
+registerWindow("memesWin", "Memes.dll");
 wireWinControls();
 
 openWindow(welcomeWin);
@@ -339,6 +366,7 @@ function dragElement(el) {
   var startY = 0;
   var moveX = 0;
   var moveY = 0;
+  var isGlitching = false;
 
   var header = document.getElementById(el.id + "header");
 
@@ -350,12 +378,20 @@ function dragElement(el) {
 
   function dragStart(e) {
     e = e || window.event;
+    
+    // If clicking a window button, don't initiate dragging
+    if (e.target.closest('.win-btn')) {
+      return;
+    }
+    
     e.preventDefault();
     bringToFront(el);
     startX = e.clientX;
     startY = e.clientY;
     document.onmouseup = dragStop;
     document.onmousemove = dragMove;
+    // 10% chance to go full brainrot and leave a permanent window trail
+    isGlitching = Math.random() < 0.1;
   }
 
   function dragMove(e) {
@@ -367,6 +403,15 @@ function dragElement(el) {
     startY = e.clientY;
     el.style.top = (el.offsetTop - moveY) + "px";
     el.style.left = (el.offsetLeft - moveX) + "px";
+    
+    if (isGlitching) {
+      // spawn infinite clones because we can
+      var clone = el.cloneNode(true);
+      clone.removeAttribute("id"); // no id collisions for us
+      clone.style.zIndex = parseInt(el.style.zIndex || 10) - 1; // tuck it slightly behind
+      clone.classList.add("glitch-trail-" + el.id); // tag it so we can nuke it later on minimize
+      document.body.appendChild(clone);
+    }
   }
 
   function dragStop() {
@@ -384,6 +429,9 @@ var paperWinText = document.getElementById("paperWinText");
 var iconsContainer = document.getElementById("icons");
 
 dragElement(paperWin);
+dragElement(document.getElementById("slopsweeper"));
+dragElement(document.getElementById("sloppypaint"));
+dragElement(document.getElementById("memesWin"));
 
 // desktop icons drag delete spin wheel gamble
 
@@ -469,6 +517,24 @@ function tapForSource(sourceKey) {
   if (sourceKey === "feedbackOpen") {
     return function() {
       openWindow(feedbackWin);
+    };
+  }
+  if (sourceKey === "slopsweeperOpen") {
+    return function() {
+      openWindow(slopsweeperWin);
+      initSlopsweeper();
+    };
+  }
+  if (sourceKey === "sloppypaintOpen") {
+    return function() {
+      openWindow(sloppypaintWin);
+      initSlopPaint();
+    };
+  }
+  if (sourceKey === "memesOpen") {
+    return function() {
+      openWindow(memesWin);
+      initMemes();
     };
   }
   return goRickroll;
@@ -784,8 +850,7 @@ function setupBuiltInIcons() {
 
   var decoyList = [
     { el: document.getElementById("trashOpen"), key: "trashOpen", label: "Trash.slop", emoji: "🗑️" },
-    { el: document.getElementById("aiOpen"), key: "aiOpen", label: "AI.exe", emoji: "🤖" },
-    { el: document.getElementById("memesOpen"), key: "memesOpen", label: "Memes.dll", emoji: "🐸" }
+    { el: document.getElementById("aiOpen"), key: "aiOpen", label: "AI.exe", emoji: "🤖" }
   ];
 
   decoyList.forEach(function(d, i) {
@@ -801,6 +866,54 @@ function setupBuiltInIcons() {
       onTap: goRickroll
     }, startTop + iconDragGap * (i + 2), startLeft);
   });
+
+  var memesOpen = document.getElementById("memesOpen");
+  if (hidden.indexOf("memesOpen") === -1) {
+    registerDesktopIcon(memesOpen, {
+      key: "memesOpen",
+      kind: "builtin",
+      label: "Memes.dll",
+      emoji: "🐸",
+      onTap: function() {
+        openWindow(memesWin);
+        initMemes();
+      }
+    }, startTop + iconDragGap * 4, startLeft);
+  } else {
+    if (memesOpen) memesOpen.remove();
+  }
+
+  var slopsweeperOpen = document.getElementById("slopsweeperOpen");
+  if (hidden.indexOf("slopsweeperOpen") === -1) {
+    registerDesktopIcon(slopsweeperOpen, {
+      key: "slopsweeperOpen",
+      kind: "builtin",
+      label: "Slopsweeper.exe",
+      emoji: "💣",
+      onTap: function() {
+        openWindow(slopsweeperWin);
+        initSlopsweeper();
+      }
+    }, startTop + iconDragGap * 5, startLeft);
+  } else {
+    if (slopsweeperOpen) slopsweeperOpen.remove();
+  }
+
+  var sloppypaintOpen = document.getElementById("sloppypaintOpen");
+  if (hidden.indexOf("sloppypaintOpen") === -1) {
+    registerDesktopIcon(sloppypaintOpen, {
+      key: "sloppypaintOpen",
+      kind: "builtin",
+      label: "SlopPaint.exe",
+      emoji: "🎨",
+      onTap: function() {
+        openWindow(sloppypaintWin);
+        initSlopPaint();
+      }
+    }, startTop + iconDragGap * 6, startLeft);
+  } else {
+    if (sloppypaintOpen) sloppypaintOpen.remove();
+  }
 }
 
 function loadExtraIcons() {
@@ -1425,6 +1538,78 @@ function scatterDesktopIcons() {
   });
 }
 
+// 1 = Circle, 2 = Diagonal, 3 = Sine Wave, 0 = Neat Grid
+var currentLayoutMode = 1; 
+
+// organize them icons in different geometries because organization is a myth
+function organizeDesktopIcons() {
+  var keys = Object.keys(iconRegistry);
+  if (keys.length === 0) return;
+
+  var total = keys.length;
+  var clientW = window.innerWidth;
+  var clientH = window.innerHeight - taskbarH;
+
+  keys.forEach(function(key, idx) {
+    var reg = iconRegistry[key];
+    var iconEl = reg.el;
+    var meta = reg.meta;
+    var top, left;
+
+    if (currentLayoutMode === 0) {
+      // Neat grid layout. Like a normal functional OS (gross).
+      var colWidth = 120;
+      var rowHeight = 85;
+      var startT = 70;
+      var startL = 25;
+      var maxRows = Math.floor((clientH - startT - 40) / rowHeight);
+      if (maxRows < 1) maxRows = 1;
+
+      var r = idx % maxRows;
+      var c = Math.floor(idx / maxRows);
+      left = startL + c * colWidth;
+      top = startT + r * rowHeight;
+    } else if (currentLayoutMode === 1) {
+      // Circle layout. Pure aesthetic.
+      var centerX = clientW / 2;
+      var centerY = clientH / 2;
+      var radius = Math.min(clientW, clientH) * 0.3;
+      var angle = (idx / total) * Math.PI * 2;
+      left = centerX + Math.cos(angle) * radius - 45;
+      top = centerY + Math.sin(angle) * radius - 35;
+    } else if (currentLayoutMode === 2) {
+      // Diagonal. The corporate slide design.
+      var progress = total > 1 ? idx / (total - 1) : 0.5;
+      left = 40 + progress * (clientW - 160);
+      top = 70 + progress * (clientH - 140);
+    } else {
+      // Sine Wave. Wavy like a snake.
+      var progress = total > 1 ? idx / (total - 1) : 0.5;
+      left = 40 + progress * (clientW - 160);
+      top = (clientH / 2) + Math.sin(progress * Math.PI * 4) * 120 - 35;
+    }
+
+    iconEl.style.top = top + "px";
+    iconEl.style.left = left + "px";
+    clampIconPos(iconEl);
+    saveIconPosByKey(meta.key, iconEl);
+
+    if (meta.kind === "extra") {
+      var extras = getExtraIcons();
+      extras.forEach(function(ex) {
+        if (ex.key === meta.key) {
+          ex.top = iconEl.style.top;
+          ex.left = iconEl.style.left;
+        }
+      });
+      saveExtraIcons(extras);
+    }
+  });
+
+  // cycle current mode
+  currentLayoutMode = (currentLayoutMode + 1) % 4;
+}
+
 function spawnShortcutIcon() {
   var key = "shortcut_" + Date.now();
   var top = 100 + Math.floor(Math.random() * 180);
@@ -1456,6 +1641,25 @@ startBtn.addEventListener("click", function(e) {
   toggleStartMenu();
 });
 
+startBtn.addEventListener("mouseover", function(e) {
+  // 30% chance to be highly annoying and evade the cursor
+  if (Math.random() < 0.3) {
+    var rx = (Math.random() * 40) - 20; // x-wobble
+    var ry = (Math.random() * -30) - 5; // mostly go up because moving down goes off screen
+    startBtn.style.transform = "translate(" + rx + "px, " + ry + "px)";
+  } else {
+    // psych, you get to click it this time
+    startBtn.style.transform = "translate(0, 0)";
+  }
+});
+
+startBtn.addEventListener("mouseout", function(e) {
+  // reset it after a brain-lag delay so it settles back home
+  setTimeout(function() {
+    startBtn.style.transform = "translate(0, 0)";
+  }, 1500); 
+});
+
 startMenuList.addEventListener("click", function(e) {
   var btn = e.target.closest(".start-item");
   if (!btn) return;
@@ -1467,8 +1671,17 @@ startMenuList.addEventListener("click", function(e) {
     openWindow(welcomeWin);
   } else if (app === "feedback") {
     openWindow(feedbackWin);
-  } else if (app === "trash" || app === "ai" || app === "memes") {
+  } else if (app === "slopsweeper") {
+    openWindow(slopsweeperWin);
+    initSlopsweeper();
+  } else if (app === "sloppypaint") {
+    openWindow(sloppypaintWin);
+    initSlopPaint();
+  } else if (app === "trash" || app === "ai") {
     goRickroll();
+  } else if (app === "memes") {
+    openWindow(memesWin);
+    initMemes();
   } else if (app === "updates") {
     alert("no updates lol u already have peak slop");
   }
@@ -1499,8 +1712,12 @@ deskNewShortcut.addEventListener("click", function() {
 
 deskSort.addEventListener("click", function() {
   hideDesktopMenu();
-  scatterDesktopIcons();
+  organizeDesktopIcons();
 });
+
+if (organizeIconsBtn) {
+  organizeIconsBtn.addEventListener("click", organizeDesktopIcons);
+}
 
 trayWifi.addEventListener("click", function() {
   alert("connected to SlopFi_5G. trust.");
@@ -1510,6 +1727,874 @@ trayBattery.addEventListener("click", function() {
   alert("3% — good luck");
 });
 
+// ==========================================
+// SLOP-SWEEPER.EXE GAME ENGINE (peak code design)
+// ==========================================
+
+var mineGrid = document.getElementById("mineGrid");
+var smileyBtn = document.getElementById("smileyBtn");
+var gameTimer = document.getElementById("gameTimer");
+var mineCounter = document.getElementById("mineCounter");
+
+var slopsweeperBoard = [];
+var slopsweeperGameOver = false;
+var slopsweeperFirstClick = true;
+var slopsweeperTimer = null;
+var slopsweeperSeconds = 0;
+var slopsweeperMines = 10;
+var slopsweeperRows = 9;
+var slopsweeperCols = 9;
+
+smileyBtn.addEventListener("click", initSlopsweeper);
+
+var slopsweeperHelp = document.getElementById("slopsweeperHelp");
+if (slopsweeperHelp) {
+  slopsweeperHelp.addEventListener("click", function(e) {
+    e.stopPropagation();
+    alert("SLOPSWEEPER.EXE - USER MANUAL\n\n" +
+          "1. Left-click cell to reveal. 10% chance it spawns a mine underneath you because it hates you.\n" +
+          "2. Right-click cell to flag. 20% chance the flag slides onto an adjacent cell because you're shaky.\n" +
+          "3. Numbers are counts of nearby mines... except when they are roman numerals, say 'few'/'some', or are flat-out lies.\n" +
+          "4. Win is strictly illegal. If you win, you crash.");
+  });
+}
+
+function initSlopsweeper() {
+  slopsweeperGameOver = false;
+  slopsweeperFirstClick = true;
+  slopsweeperSeconds = 0;
+  clearInterval(slopsweeperTimer);
+  slopsweeperTimer = null;
+  gameTimer.textContent = "000";
+  mineCounter.textContent = "010";
+  smileyBtn.textContent = "🙂";
+  
+  // prepare data array (nested loops because memory is cheap)
+  slopsweeperBoard = [];
+  for (var r = 0; r < slopsweeperRows; r++) {
+    slopsweeperBoard[r] = [];
+    for (var c = 0; c < slopsweeperCols; c++) {
+      slopsweeperBoard[r][c] = {
+        r: r,
+        c: c,
+        mine: false,
+        revealed: false,
+        flagged: false,
+        count: 0
+      };
+    }
+  }
+
+  // lay the minefield. rng gods decide your fate.
+  var minesPlaced = 0;
+  while (minesPlaced < slopsweeperMines) {
+    var r = Math.floor(Math.random() * slopsweeperRows);
+    var c = Math.floor(Math.random() * slopsweeperCols);
+    if (!slopsweeperBoard[r][c].mine) {
+      slopsweeperBoard[r][c].mine = true;
+      minesPlaced++;
+    }
+  }
+
+  recalcNeighborCounts();
+  renderSlopsweeperGrid();
+}
+
+function recalcNeighborCounts() {
+  for (var r = 0; r < slopsweeperRows; r++) {
+    for (var c = 0; c < slopsweeperCols; c++) {
+      if (slopsweeperBoard[r][c].mine) continue;
+      var count = 0;
+      for (var dr = -1; dr <= 1; dr++) {
+        for (var dc = -1; dc <= 1; dc++) {
+          var nr = r + dr;
+          var nc = c + dc;
+          if (nr >= 0 && nr < slopsweeperRows && nc >= 0 && nc < slopsweeperCols) {
+            if (slopsweeperBoard[nr][nc].mine) {
+              count++;
+            }
+          }
+        }
+      }
+      slopsweeperBoard[r][c].count = count;
+    }
+  }
+}
+
+function renderSlopsweeperGrid() {
+  mineGrid.innerHTML = "";
+  for (var r = 0; r < slopsweeperRows; r++) {
+    for (var c = 0; c < slopsweeperCols; c++) {
+      var cellEl = document.createElement("div");
+      cellEl.className = "game-cell";
+      cellEl.dataset.row = r;
+      cellEl.dataset.col = c;
+      
+      // left click to clear, right click to deploy flags
+      cellEl.addEventListener("click", handleCellClick);
+      cellEl.addEventListener("contextmenu", handleCellRightClick);
+
+      mineGrid.appendChild(cellEl);
+    }
+  }
+}
+
+function getCellEl(r, c) {
+  return mineGrid.querySelector('[data-row="' + r + '"][data-col="' + c + '"]');
+}
+
+function startTimer() {
+  slopsweeperSeconds = 0;
+  slopsweeperTimer = setInterval(function() {
+    slopsweeperSeconds++;
+    if (slopsweeperSeconds > 999) {
+      slopsweeperSeconds = 999;
+    }
+    var display = slopsweeperSeconds.toString();
+    while (display.length < 3) {
+      display = "0" + display;
+    }
+    gameTimer.textContent = display;
+  }, 1000);
+}
+
+function handleCellClick(e) {
+  if (slopsweeperGameOver) return;
+  
+  var r = parseInt(this.dataset.row, 10);
+  var c = parseInt(this.dataset.col, 10);
+  var cellData = slopsweeperBoard[r][c];
+
+  if (cellData.revealed || cellData.flagged) return;
+
+  if (slopsweeperFirstClick) {
+    slopsweeperFirstClick = false;
+    startTimer();
+    
+    // classic first click protection, except we did it sloppy
+    if (cellData.mine) {
+      var moved = false;
+      for (var tr = 0; tr < slopsweeperRows; tr++) {
+        for (var tc = 0; tc < slopsweeperCols; tc++) {
+          if (!slopsweeperBoard[tr][tc].mine && (tr !== r || tc !== c)) {
+            slopsweeperBoard[tr][tc].mine = true;
+            cellData.mine = false;
+            moved = true;
+            break;
+          }
+        }
+        if (moved) break;
+      }
+      recalcNeighborCounts();
+    }
+  } else {
+    // SCHRÖDINGER'S MINE: 10% chance to summon a mine underneath you right before reveal
+    if (!cellData.mine && Math.random() < 0.1) {
+      var mineMoved = false;
+      for (var tr = 0; tr < slopsweeperRows; tr++) {
+        for (var tc = 0; tc < slopsweeperCols; tc++) {
+          if (slopsweeperBoard[tr][tc].mine && (tr !== r || tc !== c)) {
+            slopsweeperBoard[tr][tc].mine = false;
+            cellData.mine = true;
+            mineMoved = true;
+            break;
+          }
+        }
+        if (mineMoved) break;
+      }
+      recalcNeighborCounts();
+    }
+  }
+
+  revealCell(r, c);
+}
+
+function handleCellRightClick(e) {
+  e.preventDefault();
+  if (slopsweeperGameOver) return;
+
+  var r = parseInt(this.dataset.row, 10);
+  var c = parseInt(this.dataset.col, 10);
+  var cellData = slopsweeperBoard[r][c];
+
+  if (cellData.revealed) return;
+
+  // DRUNK FLAGGING: 20% chance to put the flag on a random adjacent cell instead
+  if (Math.random() < 0.2) {
+    var adj = [];
+    for (var dr = -1; dr <= 1; dr++) {
+      for (var dc = -1; dc <= 1; dc++) {
+        var nr = r + dr;
+        var nc = c + dc;
+        if (nr >= 0 && nr < slopsweeperRows && nc >= 0 && nc < slopsweeperCols) {
+          if (!slopsweeperBoard[nr][nc].revealed) {
+            adj.push(slopsweeperBoard[nr][nc]);
+          }
+        }
+      }
+    }
+    if (adj.length > 0) {
+      var target = adj[Math.floor(Math.random() * adj.length)];
+      r = target.r;
+      c = target.c;
+      cellData = target;
+    }
+  }
+
+  cellData.flagged = !cellData.flagged;
+  var cellEl = getCellEl(r, c);
+  if (cellEl) {
+    cellEl.textContent = cellData.flagged ? "🚩" : "";
+  }
+  updateMineCounter();
+}
+
+function updateMineCounter() {
+  var flagsCount = 0;
+  for (var r = 0; r < slopsweeperRows; r++) {
+    for (var c = 0; c < slopsweeperCols; c++) {
+      if (slopsweeperBoard[r][c].flagged) {
+        flagsCount++;
+      }
+    }
+  }
+  var remaining = slopsweeperMines - flagsCount;
+  var display = remaining.toString();
+  var sign = "";
+  if (remaining < 0) {
+    sign = "-";
+    display = Math.abs(remaining).toString();
+  }
+  while (display.length < (sign ? 2 : 3)) {
+    display = "0" + display;
+  }
+  mineCounter.textContent = sign + display;
+}
+
+function getSloppyHintText(cellData) {
+  var count = cellData.count;
+  if (count === 0) return "";
+
+  var roll = Math.random();
+  if (roll < 0.15) {
+    // lie and suggest a wrong number because trust issues
+    var lied = count + (Math.random() < 0.5 ? 1 : -1);
+    if (lied < 0) lied = 0;
+    return lied === 0 ? "" : lied.toString();
+  } else if (roll < 0.3) {
+    // fancy roman numerals
+    var romans = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
+    return romans[count];
+  } else if (roll < 0.45) {
+    // English language is superior
+    if (count <= 2) return "few";
+    if (count <= 4) return "some";
+    return "HELL";
+  }
+  return count.toString();
+}
+
+function revealCell(r, c) {
+  var cellData = slopsweeperBoard[r][c];
+  if (cellData.revealed || cellData.flagged) return;
+
+  cellData.revealed = true;
+  var cellEl = getCellEl(r, c);
+  if (!cellEl) return;
+
+  cellEl.classList.add("revealed");
+
+  if (cellData.mine) {
+    gameOver(false, r, c);
+    return;
+  }
+
+  if (cellData.count > 0) {
+    var hint = getSloppyHintText(cellData);
+    cellEl.textContent = hint;
+    cellEl.dataset.count = cellData.count;
+    if (isNaN(hint) && hint !== "") {
+      cellEl.classList.add("sloppy-text");
+    }
+  } else {
+    // flood fill time
+    for (var dr = -1; dr <= 1; dr++) {
+      for (var dc = -1; dc <= 1; dc++) {
+        var nr = r + dr;
+        var nc = c + dc;
+        if (nr >= 0 && nr < slopsweeperRows && nc >= 0 && nc < slopsweeperCols) {
+          revealCell(nr, nc);
+        }
+      }
+    }
+  }
+
+  checkWinCondition();
+}
+
+function checkWinCondition() {
+  var won = true;
+  for (var r = 0; r < slopsweeperRows; r++) {
+    for (var c = 0; c < slopsweeperCols; c++) {
+      if (!slopsweeperBoard[r][c].mine && !slopsweeperBoard[r][c].revealed) {
+        won = false;
+        break;
+      }
+    }
+  }
+  if (won) {
+    gameOver(true);
+  }
+}
+
+function gameOver(won, boomR, boomC) {
+  slopsweeperGameOver = true;
+  clearInterval(slopsweeperTimer);
+
+  if (won) {
+    smileyBtn.textContent = "😎";
+    alert("FATAL ERROR:\n\nWinning is not supported on this version of SlopOS.\n\nPlease reinstall your CPU or try losing.");
+  } else {
+    smileyBtn.textContent = "😵";
+    for (var r = 0; r < slopsweeperRows; r++) {
+      for (var c = 0; c < slopsweeperCols; c++) {
+        var cellData = slopsweeperBoard[r][c];
+        var cellEl = getCellEl(r, c);
+        if (cellData.mine) {
+          cellEl.classList.add("revealed", "mine");
+          cellEl.textContent = "💣";
+        }
+      }
+    }
+    if (boomR !== undefined && boomC !== undefined) {
+      var cellEl = getCellEl(boomR, boomC);
+      if (cellEl) cellEl.style.background = "#ff0000";
+    }
+  }
+}
+
 migrateOldFeedback();
 loadFeedbackIcons();
+
+// ==========================================
+// SLOP-PAINT.EXE APPLICATION ENGINE (true masterpieces only)
+// ==========================================
+
+var paintCanvas = document.getElementById("paintCanvas");
+var paintCtx = paintCanvas ? paintCanvas.getContext("2d") : null;
+var toolBrush = document.getElementById("toolBrush");
+var toolEraser = document.getElementById("toolEraser");
+var paintClear = document.getElementById("paintClear");
+var paintSave = document.getElementById("paintSave");
+
+var currentPaintColor = "#ff0055";
+var currentPaintTool = "brush"; // "brush" or "eraser"
+var slopPaintDripTimer = null;
+var isDrawingPaint = false;
+var lastPaintX = 0;
+var lastPaintY = 0;
+var paintMouseQueue = [];
+
+var clippyReviews = [
+  "bro my toddler draw better than this. 1/10.",
+  "is this abstract art or did u sneeze on the canvas?? 2/10.",
+  "this is visual pollution fam. 0/10.",
+  "i have seen better pixels in a blue screen of death. 1.5/10.",
+  "truly a masterpiece of garbage. 3/10.",
+  "please shut down SlopOS and think about your life choices. 0/10.",
+  "clippy does not approve. -5/10."
+];
+
+function initSlopPaint() {
+  if (!paintCanvas || !paintCtx) return;
+
+  // reset tools
+  setPaintTool("brush");
+  setPaintColor("#ff0055");
+
+  // clear canvas to white
+  paintCtx.fillStyle = "#ffffff";
+  paintCtx.fillRect(0, 0, paintCanvas.width, paintCanvas.height);
+
+  // setup event listeners once
+  if (!paintCanvas.dataset.listenersWired) {
+    paintCanvas.dataset.listenersWired = "true";
+
+    paintCanvas.addEventListener("mousedown", startPainting);
+    paintCanvas.addEventListener("mousemove", drawOnCanvas);
+    paintCanvas.addEventListener("mouseup", stopPainting);
+    paintCanvas.addEventListener("mouseleave", stopPainting);
+
+    // wire colors
+    document.querySelectorAll(".color-swatch").forEach(function(swatch) {
+      swatch.addEventListener("click", function() {
+        var color = this.dataset.color;
+        setPaintColor(color);
+      });
+    });
+
+    // wire tools
+    toolBrush.addEventListener("click", function() { setPaintTool("brush"); });
+    toolEraser.addEventListener("click", function() { setPaintTool("eraser"); });
+
+    paintClear.addEventListener("click", function() {
+      paintCtx.fillStyle = "#ffffff";
+      paintCtx.fillRect(0, 0, paintCanvas.width, paintCanvas.height);
+    });
+
+    paintSave.addEventListener("click", function() {
+      var review = clippyReviews[Math.floor(Math.random() * clippyReviews.length)];
+      alert("CLIPPY ART INSPECTOR:\n\n" + review);
+    });
+  }
+
+  // start melting physics timer
+  if (!slopPaintDripTimer) {
+    startDripTimer();
+  }
+}
+
+function setPaintTool(tool) {
+  currentPaintTool = tool;
+  document.querySelectorAll(".tool-btn").forEach(function(btn) {
+    btn.classList.remove("active-tool");
+  });
+  if (tool === "brush") {
+    toolBrush.classList.add("active-tool");
+  } else {
+    toolEraser.classList.add("active-tool");
+  }
+}
+
+function setPaintColor(color) {
+  currentPaintColor = color;
+  document.querySelectorAll(".color-swatch").forEach(function(swatch) {
+    swatch.classList.remove("active-color");
+    if (swatch.dataset.color === color) {
+      swatch.classList.add("active-color");
+    }
+  });
+}
+
+function startDripTimer() {
+  clearInterval(slopPaintDripTimer);
+  // Melt/drip down 1px every 80ms for wet paint look
+  slopPaintDripTimer = setInterval(function() {
+    if (!paintCanvas || !paintCtx) return;
+
+    // copy canvas shifted down by 1px
+    var tempCanvas = document.createElement("canvas");
+    tempCanvas.width = paintCanvas.width;
+    tempCanvas.height = paintCanvas.height;
+    var tempCtx = tempCanvas.getContext("2d");
+    tempCtx.drawImage(paintCanvas, 0, 0);
+
+    // draw back shifted
+    paintCtx.fillStyle = "#ffffff";
+    paintCtx.fillRect(0, 0, paintCanvas.width, paintCanvas.height);
+    paintCtx.drawImage(tempCanvas, 0, 0, paintCanvas.width, paintCanvas.height - 1, 0, 1, paintCanvas.width, paintCanvas.height - 1);
+  }, 80);
+}
+
+function startPainting(e) {
+  isDrawingPaint = true;
+  var coords = getCanvasCoords(e);
+  
+  // DRUNK BRUSH: initial coordinate jitter
+  var rx = coords.x + (Math.random() * 20 - 10);
+  var ry = coords.y + (Math.random() * 20 - 10);
+  
+  lastPaintX = rx;
+  lastPaintY = ry;
+  paintMouseQueue = [];
+}
+
+function stopPainting() {
+  isDrawingPaint = false;
+  paintMouseQueue = [];
+}
+
+function getCanvasCoords(e) {
+  var rect = paintCanvas.getBoundingClientRect();
+  return {
+    x: (e.clientX - rect.left) * (paintCanvas.width / rect.width),
+    y: (e.clientY - rect.top) * (paintCanvas.height / rect.height)
+  };
+}
+
+function drawOnCanvas(e) {
+  if (!isDrawingPaint) return;
+  var coords = getCanvasCoords(e);
+
+  // DRUNK BRUSH: Queue coordinates and add lag/delay + random tremoring
+  paintMouseQueue.push(coords);
+  if (paintMouseQueue.length < 3) return;
+
+  var targetCoords = paintMouseQueue.shift();
+  var tx = targetCoords.x + (Math.random() * 8 - 4);
+  var ty = targetCoords.y + (Math.random() * 8 - 4);
+
+  paintCtx.beginPath();
+  paintCtx.lineCap = "round";
+  
+  if (currentPaintTool === "brush") {
+    paintCtx.strokeStyle = currentPaintColor;
+    paintCtx.lineWidth = 4;
+    paintCtx.moveTo(lastPaintX, lastPaintY);
+    paintCtx.lineTo(tx, ty);
+    paintCtx.stroke();
+  } else {
+    // CURSED ERASER: paints in neon pink and stamps "SLOP"
+    paintCtx.strokeStyle = "#ff00ff"; // hot pink!
+    paintCtx.lineWidth = 14;
+    paintCtx.moveTo(lastPaintX, lastPaintY);
+    paintCtx.lineTo(tx, ty);
+    paintCtx.stroke();
+
+    // stamp "SLOP" randomly
+    if (Math.random() < 0.25) {
+      paintCtx.fillStyle = "#00ff88"; // green text
+      paintCtx.font = "bold 9px 'Comic Sans MS'";
+      paintCtx.fillText("SLOP", tx - 10, ty + 3);
+    }
+  }
+
+  lastPaintX = tx;
+  lastPaintY = ty;
+}
+
+// ==========================================
+// MEMES.DLL ENGINE (real memes only)
+// ==========================================
+
+var memeImg = document.getElementById("memeImg");
+if (memeImg) {
+  memeImg.crossOrigin = "anonymous";
+}
+var memeInputTop = document.getElementById("memeInputTop");
+var memeInputBottom = document.getElementById("memeInputBottom");
+var memeTextTop = document.getElementById("memeTextTop");
+var memeTextBottom = document.getElementById("memeTextBottom");
+var memeNextBtn = document.getElementById("memeNextBtn");
+
+var memeSizeTop = document.getElementById("memeSizeTop");
+var memePosTop = document.getElementById("memePosTop");
+var memeSizeBottom = document.getElementById("memeSizeBottom");
+var memePosBottom = document.getElementById("memePosBottom");
+var memeTextColor = document.getElementById("memeTextColor");
+var memeOutlineColor = document.getElementById("memeOutlineColor");
+var memeDownloadBtn = document.getElementById("memeDownloadBtn");
+
+var valSizeTop = document.getElementById("valSizeTop");
+var valPosTop = document.getElementById("valPosTop");
+var valSizeBottom = document.getElementById("valSizeBottom");
+var valPosBottom = document.getElementById("valPosBottom");
+
+var memesList = [];
+var currentMemeIndex = 0;
+
+var fallbackMemes = [
+  { url: "https://i.imgflip.com/30b1gx.jpg", name: "Drake Hotline Bling" },
+  { url: "https://i.imgflip.com/1ur9ql.jpg", name: "Distracted Boyfriend" },
+  { url: "https://i.imgflip.com/1g8my4.jpg", name: "Two Buttons" },
+  { url: "https://i.imgflip.com/2fm6x.jpg", name: "Change My Mind" },
+  { url: "https://i.imgflip.com/9ehk.jpg", name: "Epic Handshake" },
+  { url: "https://i.imgflip.com/43a45p.png", name: "Think About It" }
+];
+
+function initMemes() {
+  if (!memeNextBtn.dataset.listenersWired) {
+    memeNextBtn.dataset.listenersWired = "true";
+
+    memeInputTop.addEventListener("input", function() {
+      memeTextTop.textContent = this.value;
+    });
+
+    memeInputBottom.addEventListener("input", function() {
+      memeTextBottom.textContent = this.value;
+    });
+
+    memeSizeTop.addEventListener("input", function() {
+      valSizeTop.textContent = this.value + "px";
+      memeTextTop.style.fontSize = this.value + "px";
+    });
+
+    memePosTop.addEventListener("input", function() {
+      valPosTop.textContent = this.value + "px";
+      memeTextTop.style.top = this.value + "px";
+    });
+
+    memeSizeBottom.addEventListener("input", function() {
+      valSizeBottom.textContent = this.value + "px";
+      memeTextBottom.style.fontSize = this.value + "px";
+    });
+
+    memePosBottom.addEventListener("input", function() {
+      valPosBottom.textContent = this.value + "px";
+      memeTextBottom.style.bottom = this.value + "px";
+    });
+
+    function updateOutlineStyles() {
+      var color = memeOutlineColor.value;
+      var shadow = [
+        "-2px -2px 0 " + color,
+        "2px -2px 0 " + color,
+        "-2px 2px 0 " + color,
+        "2px 2px 0 " + color,
+        "-2px 0px 0 " + color,
+        "2px 0px 0 " + color,
+        "0px -2px 0 " + color,
+        "0px 2px 0 " + color
+      ].join(", ");
+      memeTextTop.style.textShadow = shadow;
+      memeTextBottom.style.textShadow = shadow;
+    }
+
+    memeTextColor.addEventListener("input", function() {
+      memeTextTop.style.color = this.value;
+      memeTextBottom.style.color = this.value;
+    });
+
+    memeOutlineColor.addEventListener("input", updateOutlineStyles);
+
+    memeNextBtn.addEventListener("click", showNextMeme);
+    
+    if (memeDownloadBtn) {
+      memeDownloadBtn.addEventListener("click", downloadMeme);
+    }
+  }
+
+  // wipe inputs clean
+  memeInputTop.value = "";
+  memeInputBottom.value = "";
+  memeTextTop.textContent = "";
+  memeTextBottom.textContent = "";
+
+  // slam defaults so sliders and colors sync up
+  if (memeSizeTop) memeSizeTop.value = "24";
+  if (memePosTop) memePosTop.value = "8";
+  if (memeSizeBottom) memeSizeBottom.value = "24";
+  if (memePosBottom) memePosBottom.value = "8";
+  if (memeTextColor) memeTextColor.value = "#ffffff";
+  if (memeOutlineColor) memeOutlineColor.value = "#000000";
+
+  if (valSizeTop) valSizeTop.textContent = "24px";
+  if (valPosTop) valPosTop.textContent = "8px";
+  if (valSizeBottom) valSizeBottom.textContent = "24px";
+  if (valPosBottom) valPosBottom.textContent = "8px";
+
+  memeTextTop.style.fontSize = "24px";
+  memeTextTop.style.top = "8px";
+  memeTextBottom.style.fontSize = "24px";
+  memeTextBottom.style.bottom = "8px";
+  memeTextTop.style.color = "#ffffff";
+  memeTextBottom.style.color = "#ffffff";
+
+  var defaultShadow = [
+    "-2px -2px 0 #000",
+    "2px -2px 0 #000",
+    "-2px 2px 0 #000",
+    "2px 2px 0 #000",
+    "-2px 0px 0 #000",
+    "2px 0px 0 #000",
+    "0px -2px 0 #000",
+    "0px 2px 0 #000"
+  ].join(", ");
+  memeTextTop.style.textShadow = defaultShadow;
+  memeTextBottom.style.textShadow = defaultShadow;
+
+  if (memesList.length === 0) {
+    fetchMemesTemplates();
+  } else {
+    showNextMeme();
+  }
+}
+
+function fetchMemesTemplates() {
+  memeImg.alt = "Fetching templates from Imgflip...";
+  fetch("https://api.imgflip.com/get_memes")
+    .then(function(res) {
+      return res.json();
+    })
+    .then(function(json) {
+      if (json.success && json.data && json.data.memes) {
+        memesList = json.data.memes;
+        memesList.sort(function() { return 0.5 - Math.random(); });
+        showNextMeme();
+      } else {
+        useFallbackMemes();
+      }
+    })
+    .catch(function() {
+      useFallbackMemes();
+    });
+}
+
+function useFallbackMemes() {
+  memesList = fallbackMemes;
+  memesList.sort(function() { return 0.5 - Math.random(); });
+  showNextMeme();
+}
+
+function showNextMeme() {
+  if (memesList.length === 0) return;
+  currentMemeIndex = (currentMemeIndex + 1) % memesList.length;
+  var meme = memesList[currentMemeIndex];
+  memeImg.src = meme.url;
+  memeImg.alt = meme.name;
+}
+
+function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, strokeStyle, fillStyle, fontSize, isTop) {
+  var words = text.split(" ");
+  var lines = [];
+  var currentLine = "";
+
+  for (var n = 0; n < words.length; n++) {
+    var testLine = currentLine + words[n] + " ";
+    var metrics = ctx.measureText(testLine);
+    var testWidth = metrics.width;
+    if (testWidth > maxWidth && n > 0) {
+      lines.push(currentLine.trim());
+      currentLine = words[n] + " ";
+    } else {
+      currentLine = testLine;
+    }
+  }
+  lines.push(currentLine.trim());
+
+  // grab chosen font size, styling, outline thickness, etc.
+  ctx.fillStyle = fillStyle;
+  ctx.strokeStyle = strokeStyle;
+  ctx.lineWidth = Math.max(2, Math.round(fontSize / 6));
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  ctx.textAlign = "center";
+
+  // figure out top/bottom alignment base Y
+  var totalHeight = lines.length * lineHeight;
+  var startY = y;
+  
+  if (isTop) {
+    ctx.textBaseline = "top";
+    startY = y;
+  } else {
+    ctx.textBaseline = "bottom";
+    startY = y - totalHeight + lineHeight;
+  }
+
+  for (var i = 0; i < lines.length; i++) {
+    var lineY = startY + i * lineHeight;
+    ctx.strokeText(lines[i], x, lineY);
+    ctx.fillText(lines[i], x, lineY);
+  }
+}
+
+function downloadMeme() {
+  if (!memeImg.src || (memeImg.src.indexOf("data:") === 0 && !memeImg.naturalWidth)) {
+    alert("Wait for template to load first, fam!");
+    return;
+  }
+
+  var canvas = document.createElement("canvas");
+  var ctx = canvas.getContext("2d");
+
+  var naturalW = memeImg.naturalWidth;
+  var naturalH = memeImg.naturalHeight;
+
+  if (naturalW === 0 || naturalH === 0) {
+    alert("Image hasn't finished loading or is invalid.");
+    return;
+  }
+
+  canvas.width = naturalW;
+  canvas.height = naturalH;
+
+  // slap the meme backdrop onto the canvas
+  ctx.drawImage(memeImg, 0, 0, naturalW, naturalH);
+
+  var clientW = memeImg.clientWidth || 300;
+  var clientH = memeImg.clientHeight || 300;
+
+  var scaleX = naturalW / clientW;
+  var scaleY = naturalH / clientH;
+
+  // drop top caption if they typed something
+  if (memeInputTop.value.trim() !== "") {
+    var sizeTop = parseInt(memeSizeTop.value, 10) || 24;
+    var scaledSizeTop = Math.round(sizeTop * scaleX);
+    var offsetTop = parseInt(memePosTop.value, 10) || 8;
+    var scaledOffsetTop = Math.round(offsetTop * scaleY);
+
+    ctx.font = "900 " + scaledSizeTop + "px Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif";
+    var lineHeightTop = Math.round(scaledSizeTop * 1.15);
+    var maxWidthTop = Math.round(naturalW * 0.9);
+    var xTop = Math.round(naturalW / 2);
+    
+    drawWrappedText(
+      ctx,
+      memeInputTop.value.toUpperCase(),
+      xTop,
+      scaledOffsetTop,
+      maxWidthTop,
+      lineHeightTop,
+      memeOutlineColor.value,
+      memeTextColor.value,
+      scaledSizeTop,
+      true
+    );
+  }
+
+  // drop bottom caption if they typed something
+  if (memeInputBottom.value.trim() !== "") {
+    var sizeBottom = parseInt(memeSizeBottom.value, 10) || 24;
+    var scaledSizeBottom = Math.round(sizeBottom * scaleX);
+    var offsetBottom = parseInt(memePosBottom.value, 10) || 8;
+    var scaledOffsetBottom = Math.round(offsetBottom * scaleY);
+
+    ctx.font = "900 " + scaledSizeBottom + "px Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif";
+    var lineHeightBottom = Math.round(scaledSizeBottom * 1.15);
+    var maxWidthBottom = Math.round(naturalW * 0.9);
+    var xBottom = Math.round(naturalW / 2);
+    var yBottom = naturalH - scaledOffsetBottom;
+
+    drawWrappedText(
+      ctx,
+      memeInputBottom.value.toUpperCase(),
+      xBottom,
+      yBottom,
+      maxWidthBottom,
+      lineHeightBottom,
+      memeOutlineColor.value,
+      memeTextColor.value,
+      scaledSizeBottom,
+      false
+    );
+  }
+
+  // stamp the signature watermark so everyone knows it's certified slop
+  var watermarkSize = Math.round(Math.max(10, naturalW * 0.025));
+  ctx.font = watermarkSize + "px monospace";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+  ctx.lineWidth = Math.max(1, Math.round(watermarkSize / 6));
+  ctx.textAlign = "left";
+  ctx.textBaseline = "bottom";
+  var watermarkX = Math.round(naturalW * 0.02);
+  var watermarkY = naturalH - Math.round(naturalH * 0.02);
+  ctx.strokeText("made with slop", watermarkX, watermarkY);
+  ctx.fillText("made with slop", watermarkX, watermarkY);
+
+  try {
+    var dataUrl = canvas.toDataURL("image/png");
+    var link = document.createElement("a");
+    link.download = "slop_meme_" + Date.now() + ".png";
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (err) {
+    console.error("Canvas export failed:", err);
+    alert("CORS security blocked download. Try another template or use our fallback templates!");
+  }
+}
 
