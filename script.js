@@ -285,6 +285,8 @@ function restoreWindow(el) {
   setActiveWin(id);
 }
 
+var maximizeCount = 0;
+
 function maximizeWindow(el) {
   var id = getWinId(el);
   var win = managedWindows[id];
@@ -297,6 +299,14 @@ function maximizeWindow(el) {
     el.style.left = win.savedLeft;
     el.classList.remove("win-maxed");
     win.maximized = false;
+    return;
+  }
+
+  // increment maximize counter and trigger BSOD if they spam it
+  maximizeCount++;
+  if (maximizeCount >= 4) {
+    triggerBSOD("ERROR_WINDOW_STRETCH_OVERFLOW");
+    maximizeCount = 0;
     return;
   }
 
@@ -1349,6 +1359,20 @@ var clippyTips = [
   "pro tip: clicking stuff usually does something. usually.",
   "i noticed you havent rickrolled yourself yet. want help?"
 ];
+var clippyMemeTips = [
+  "It looks like you're writing a meme! Would you like me to make it less funny for you?",
+  "pro tip: impact font looks better when the text is actually funny",
+  "have you tried typing 'drake' or 'boyfriend'? they are the only templates this system can afford",
+  "is that top text really the best you could do? i'm not mad, just disappointed",
+  "watermark says 'made with slop' for a reason, fam"
+];
+var clippyPaintTips = [
+  "I notice you've been drawing. Have you considered getting a real job?",
+  "that is a lovely circle. too bad the melting physics will destroy it in 3 seconds",
+  "eraser stamps 'SLOP' because your art is kind of trash anyway",
+  "are you trying to draw a masterpiece on a 320x240 canvas? ambitious.",
+  "remember: hot pink is the only color that matters here"
+];
 var clippyCompliments = [
   "wow what a question. still idk lol",
   "youre so smart bestie. anyway no clue",
@@ -1380,7 +1404,17 @@ function showClippyTip() {
 
   clippyShowingTip = true;
   clippyAsk.style.display = "none";
-  clippyMsg.textContent = pickRandom(clippyTips);
+
+  var selectedTip;
+  if (activeWinId === "memesWin") {
+    selectedTip = pickRandom(clippyMemeTips);
+  } else if (activeWinId === "sloppypaint") {
+    selectedTip = pickRandom(clippyPaintTips);
+  } else {
+    selectedTip = pickRandom(clippyTips);
+  }
+
+  clippyMsg.textContent = selectedTip;
 
   setTimeout(function() {
     if (clippyThinking || clippyBox.classList.contains("hidden")) {
@@ -1683,7 +1717,7 @@ startMenuList.addEventListener("click", function(e) {
     openWindow(memesWin);
     initMemes();
   } else if (app === "updates") {
-    alert("no updates lol u already have peak slop");
+    triggerBSOD("ERROR_TOO_MUCH_SLOP_IN_SYSTEM_BUFFER");
   }
 });
 
@@ -2596,5 +2630,96 @@ function downloadMeme() {
     console.error("Canvas export failed:", err);
     alert("CORS security blocked download. Try another template or use our fallback templates!");
   }
+}
+
+// ==========================================
+// FATAL ERROR SYSTEM RECOVERY (BSOD / BIOS boot loop)
+// ==========================================
+
+function triggerBSOD(errorMessage) {
+  var bsodScreen = document.getElementById("bsodScreen");
+  var bsodView = document.getElementById("bsodView");
+  var biosView = document.getElementById("biosView");
+  var bsodErrorMessage = document.getElementById("bsodErrorMessage");
+
+  if (!bsodScreen) return;
+
+  bsodErrorMessage.textContent = "Error: " + (errorMessage || "ERROR_TOO_MUCH_SLOP_IN_SYSTEM_BUFFER");
+  bsodScreen.classList.remove("bios-mode");
+  bsodView.style.display = "block";
+  biosView.style.display = "none";
+  bsodScreen.style.display = "block";
+
+  // click it to start the bios reboot
+  var rebootBtn = document.getElementById("bsodRebootBtn");
+  if (rebootBtn) {
+    rebootBtn.onclick = function() {
+      startBiosReboot();
+    };
+  }
+
+  // let them hit enter or space to reboot because keyboards are cool
+  function handleBsodKeyPress(e) {
+    if (e.key === "Enter" || e.key === " ") {
+      document.removeEventListener("keydown", handleBsodKeyPress);
+      startBiosReboot();
+    }
+  }
+  document.addEventListener("keydown", handleBsodKeyPress);
+}
+
+function startBiosReboot() {
+  var bsodScreen = document.getElementById("bsodScreen");
+  var bsodView = document.getElementById("bsodView");
+  var biosView = document.getElementById("biosView");
+  var biosLog = document.getElementById("biosLog");
+
+  if (!bsodScreen) return;
+
+  bsodScreen.classList.add("bios-mode");
+  bsodView.style.display = "none";
+  biosView.style.display = "block";
+  biosLog.innerHTML = "";
+
+  // print lines with a retro delay so it feels like a 90s machine booting
+  function printLine(text, delay, callback) {
+    setTimeout(function() {
+      var p = document.createElement("div");
+      p.className = "bios-line";
+      p.textContent = text;
+      biosLog.appendChild(p);
+      if (callback) callback();
+    }, delay);
+  }
+
+  printLine("CPU: Slop-Pro (TM) at 33 MHz", 200, function() {
+    printLine("Detecting IDE Primary Master ... SLOP-DRIVE-200MB", 400, function() {
+      printLine("Detecting IDE Primary Slave  ... NONE", 300, function() {
+        // tick up the RAM slowly for maximum suspense
+        var p = document.createElement("div");
+        p.className = "bios-line";
+        biosLog.appendChild(p);
+        
+        var ramCount = 0;
+        var ramInterval = setInterval(function() {
+          ramCount += 4096;
+          p.textContent = "Memory Test: " + ramCount + "KB OK";
+          if (ramCount >= 65536) {
+            clearInterval(ramInterval);
+            printLine("Floppy drive A: Found (3.5\" 1.44MB)", 400, function() {
+              printLine("Loading Boot Sector from C: ... OK", 400, function() {
+                printLine("Starting SlopOS...", 300, function() {
+                  setTimeout(function() {
+                    // hard refresh to clear the slop and start fresh
+                    window.location.reload();
+                  }, 800);
+                });
+              });
+            });
+          }
+        }, 80);
+      });
+    });
+  });
 }
 

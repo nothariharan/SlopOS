@@ -1699,4 +1699,83 @@ body {
   cursor: pointer;
 }
 
+/* Fake BSOD and BIOS styling */
+.bsod-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  background: #0000aa;
+  color: #ffffff;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 15px;
+  line-height: 1.5;
+  padding: 40px;
+  box-sizing: border-box;
+  overflow: hidden;
+  user-select: none;
+}
+
+.bsod-overlay.bios-mode {
+  background: #000000;
+  color: #c0c0c0;
+}
+
+.bsod-title-label {
+  background: #ffffff;
+  color: #0000aa;
+  padding: 2px 8px;
+  display: inline-block;
+  font-weight: bold;
+}
+
+.bsod-reboot-box {
+  margin-top: 40px;
+  text-align: center;
+}
+
+.bsod-btn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  padding: 10px;
+  outline: none;
+}
+
+.bsod-btn:hover, .bsod-btn:focus {
+  background: #ffffff;
+  color: #0000aa;
+}
+
+.bios-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.bios-logo {
+  font-size: 40px;
+}
+
+.bios-divider {
+  border: 1px solid #c0c0c0;
+  margin: 20px 0;
+}
+
+.bios-log {
+  white-space: pre-wrap;
+  font-family: 'Courier New', Courier, monospace;
+  text-align: left;
+}
+
+.bios-line {
+  margin-bottom: 8px;
+}
+
+
 

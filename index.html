@@ -390,6 +390,38 @@
     </div>
   </div>
 
+  <!-- Fake BSOD / BIOS Screen -->
+  <div id="bsodScreen" class="bsod-overlay" style="display: none;">
+    <!-- BSOD View -->
+    <div id="bsodView" class="bsod-content">
+      <p class="bsod-title-label">SlopOS</p>
+      <br><br>
+      <p>A fatal exception 0E has occurred at 0028:C0011A39 in VXD VMM(01) + 00005939. The current application will be terminated.</p>
+      <br>
+      <p>* Press any key to terminate the current application.</p>
+      <p>* Press CTRL+ALT+DEL again to restart your computer. You will lose any unsaved information in all applications.</p>
+      <br>
+      <p id="bsodErrorMessage">Error: ERROR_TOO_MUCH_SLOP_IN_SYSTEM_BUFFER</p>
+      <br><br>
+      <div class="bsod-reboot-box">
+        <button type="button" class="bsod-btn" id="bsodRebootBtn">[ Press Enter or Click Here to Reboot System ]</button>
+      </div>
+    </div>
+
+    <!-- BIOS View -->
+    <div id="biosView" class="bios-content" style="display: none;">
+      <div class="bios-header">
+        <span class="bios-logo">🏆</span>
+        <div class="bios-header-text">
+          <p class="bios-title">AMIBIOS (C) 1995 American Megatrends, Inc.</p>
+          <p>SlopOS V0.0.0.67 BIOS Date: 06/27/95</p>
+        </div>
+      </div>
+      <hr class="bios-divider">
+      <div class="bios-log" id="biosLog"></div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 
 </body>
