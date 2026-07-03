@@ -365,6 +365,7 @@ registerWindow("paperWin", "feedback1");
 registerWindow("slopsweeper", "Slopsweeper.exe");
 registerWindow("sloppypaint", "SlopPaint.exe");
 registerWindow("memesWin", "Memes.dll");
+registerWindow("terminalWin", "command.com");
 wireWinControls();
 
 openWindow(welcomeWin);
@@ -442,6 +443,7 @@ dragElement(paperWin);
 dragElement(document.getElementById("slopsweeper"));
 dragElement(document.getElementById("sloppypaint"));
 dragElement(document.getElementById("memesWin"));
+dragElement(document.getElementById("terminalWin"));
 
 // desktop icons drag delete spin wheel gamble
 
@@ -545,6 +547,12 @@ function tapForSource(sourceKey) {
     return function() {
       openWindow(memesWin);
       initMemes();
+    };
+  }
+  if (sourceKey === "terminalOpen") {
+    return function() {
+      openWindow(terminalWin);
+      initTerminal();
     };
   }
   return goRickroll;
@@ -923,6 +931,22 @@ function setupBuiltInIcons() {
     }, startTop + iconDragGap * 6, startLeft);
   } else {
     if (sloppypaintOpen) sloppypaintOpen.remove();
+  }
+
+  var terminalOpen = document.getElementById("terminalOpen");
+  if (hidden.indexOf("terminalOpen") === -1) {
+    registerDesktopIcon(terminalOpen, {
+      key: "terminalOpen",
+      kind: "builtin",
+      label: "command.com",
+      emoji: "💻",
+      onTap: function() {
+        openWindow(terminalWin);
+        initTerminal();
+      }
+    }, startTop + iconDragGap * 7, startLeft);
+  } else {
+    if (terminalOpen) terminalOpen.remove();
   }
 }
 
@@ -1716,6 +1740,9 @@ startMenuList.addEventListener("click", function(e) {
   } else if (app === "memes") {
     openWindow(memesWin);
     initMemes();
+  } else if (app === "terminal") {
+    openWindow(terminalWin);
+    initTerminal();
   } else if (app === "updates") {
     triggerBSOD("ERROR_TOO_MUCH_SLOP_IN_SYSTEM_BUFFER");
   }
@@ -2681,35 +2708,6 @@ function startBiosReboot() {
   biosView.style.display = "block";
   biosLog.innerHTML = "";
 
-  // print lines with a retro delay so it feels like a 90s machine booting
-  function printLine(text, delay, callback) {
-    setTimeout(function() {
-      var p = document.createElement("div");
-      p.className = "bios-line";
-      p.textContent = text;
-      biosLog.appendChild(p);
-      if (callback) callback();
-    }, delay);
-  }
-
-  printLine("CPU: Slop-Pro (TM) at 33 MHz", 200, function() {
-    printLine("Detecting IDE Primary Master ... SLOP-DRIVE-200MB", 400, function() {
-      printLine("Detecting IDE Primary Slave  ... NONE", 300, function() {
-        // tick up the RAM slowly for maximum suspense
-        var p = document.createElement("div");
-        p.className = "bios-line";
-        biosLog.appendChild(p);
-        
-        var ramCount = 0;
-        var ramInterval = setInterval(function() {
-          ramCount += 4096;
-          p.textContent = "Memory Test: " + ramCount + "KB OK";
-          if (ramCount >= 65536) {
-            clearInterval(ramInterval);
-            printLine("Floppy drive A: Found (3.5\" 1.44MB)", 400, function() {
-              printLine("Loading Boot Sector from C: ... OK", 400, function() {
-                printLine("Starting SlopOS...", 300, function() {
-                  setTimeout(function() {
                     // hard refresh to clear the slop and start fresh
                     window.location.reload();
                   }, 800);
@@ -2720,6 +2718,609 @@ function startBiosReboot() {
         }, 80);
       });
     });
+  });
+}
+
+// ==========================================
+// CLUNKY TERMINAL (command.com) ENGINE
+// ==========================================
+
+var terminalWin = document.getElementById("terminalWin");
+var terminalLog = document.getElementById("terminalLog");
+var terminalInput = document.getElementById("terminalInput");
+var terminalPrompt = document.getElementById("terminalPrompt");
+var terminalBody = document.getElementById("terminalBody");
+
+var currentPath = ["C:", "Desktop"];
+var lastTypeTime = 0;
+var typingLockout = false;
+
+var virtualFS = {
+  "C:": {
+    type: "dir",
+    name: "C:",
+    children: {
+      "Desktop": {
+        type: "dir",
+        name: "Desktop",
+        children: {
+          "Welcome.slop": { type: "file", name: "Welcome.slop", content: "yo bestie welcome to slopos. its v0.0.0.67 and honestly it is a miracle this code compiles. drag stuff around but dont break it (u will break it)." },
+          "Feedback.slop": { type: "file", name: "Feedback.slop", content: "feedback logs are eaten by the garbage can. literal digital trash." },
+          "Trash.slop": { type: "file", name: "Trash.slop", content: "deleted shortcuts go here to multiply. pure casino gaming." },
+          "Memes.dll": { type: "exe", name: "Memes.dll", windowId: "memesWin", initFn: function() { initMemes(); } },
+          "Slopsweeper.exe": { type: "exe", name: "Slopsweeper.exe", windowId: "slopsweeper", initFn: function() { initSlopsweeper(); } },
+          "SlopPaint.exe": { type: "exe", name: "SlopPaint.exe", windowId: "sloppypaint", initFn: function() { initSlopPaint(); } },
+          "command.com": { type: "exe", name: "command.com", windowId: "terminalWin", initFn: function() { initTerminal(); } }
+        }
+      },
+      "Windows": {
+        type: "dir",
+        name: "Windows",
+        children: {
+          "System32": {
+            type: "dir",
+            name: "System32",
+            children: {
+              "hal.dll": { type: "file", name: "hal.dll", content: "hardware abstraction layer? more like hardware disappointment layer." },
+              "kernel.dll": { type: "file", name: "kernel.dll", content: "slop core. do not touch or clippy will consume your soul." }
+            }
+          },
+          "slop.ini": { type: "file", name: "slop.ini", content: "[boot]\r\nsafemode=0\r\nbrainrot=1\r\nsarcasm=100\r\nclippy=annoying" },
+          "Adventure.slop": { type: "game", name: "Adventure.slop" }
+        }
+      }
+    }
+  }
+};
+
+// Game state variables
+var inAdventureGame = false;
+var adventureStep = 0;
+
+// Get directory node by parsing path array
+function getNodeAtPath(pathArr) {
+  var current = virtualFS["C:"];
+  for (var i = 1; i < pathArr.length; i++) {
+    var segment = pathArr[i];
+    if (current && current.children && current.children[segment]) {
+      current = current.children[segment];
+    } else {
+      return null;
+    }
+  }
+  return current;
+}
+
+// Convert path array to string prompt
+function getPathString(pathArr) {
+  return pathArr.join("\\") + ">";
+}
+
+function playBeep() {
+  try {
+    var AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    var audioCtx = new AudioCtx();
+    var oscillator = audioCtx.createOscillator();
+    var gainNode = audioCtx.createGain();
+    
+    oscillator.type = "square"; // retro PC speaker sound
+    oscillator.frequency.value = 140; // low buzzing fail sound
+    gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + 0.25);
+  } catch (e) {
+    console.error("Audio beep failed", e);
+  }
+}
+
+function shakeTerminal() {
+  if (!terminalBody) return;
+  terminalBody.classList.remove("terminal-shake-active");
+  // Force redraw
+  void terminalBody.offsetWidth;
+  terminalBody.classList.add("terminal-shake-active");
+  setTimeout(function() {
+    terminalBody.classList.remove("terminal-shake-active");
+  }, 250);
+}
+
+function printBaudText(text, logCallback) {
+  var lines = text.split("\n");
+  var lineIndex = 0;
+  terminalInput.disabled = true;
+
+  function printNextLine() {
+    if (lineIndex < lines.length) {
+      var p = document.createElement("div");
+      p.textContent = lines[lineIndex];
+      terminalLog.appendChild(p);
+      terminalLog.scrollTop = terminalLog.scrollHeight;
+      lineIndex++;
+      
+      // simulated baud connection speed
+      setTimeout(printNextLine, 40 + Math.random() * 30);
+    } else {
+      terminalInput.disabled = false;
+      terminalInput.focus();
+      if (logCallback) logCallback();
+    }
+  }
+
+  printNextLine();
+}
+
+function initTerminal() {
+  if (!terminalLog) return;
+  terminalLog.innerHTML = "";
+  currentPath = ["C:", "Desktop"];
+  terminalPrompt.textContent = getPathString(currentPath);
+  terminalInput.value = "";
+  
+  var asciiSplash = [
+    "  ____  _        ___  ____     ___  ____  ",
+    " / ___|| |      / _ \\|  _ \\   / _ \\/ ___| ",
+    " \\___ \\| |     | | | | |_) | | | | \\___ \\ ",
+    "  ___) | |___  | |_| |  __/  | |_| |___) |",
+    " |____/|_____|  \\___/|_|      \\___/|____/ ",
+    "                                          ",
+    "   (C) 1995 SLOP CORPORATION. ALL RIGHTS WRONGED.",
+    "   Welcome to command.com Command Console.",
+    "   Type 'help' to see what commands haven't broken yet.",
+    ""
+  ].join("\n");
+
+  inAdventureGame = false;
+  adventureStep = 0;
+  printBaudText(asciiSplash);
+  
+  if (!terminalWired) {
+    terminalWired = true;
+    
+    // Focus terminal input when clicking terminal window body
+    terminalBody.addEventListener("click", function() {
+      if (!terminalInput.disabled) {
+        terminalInput.focus();
+      }
+    });
+
+    terminalInput.addEventListener("keydown", function(e) {
+      var now = Date.now();
+      
+      // Intercept keypresses if locked out
+      if (typingLockout) {
+        e.preventDefault();
+        return;
+      }
+      
+      // Rapid-typing buffer overflow check
+      if (lastTypeTime > 0 && (now - lastTypeTime) < 80 && e.key !== "Backspace") {
+        e.preventDefault();
+        typingLockout = true;
+        terminalInput.disabled = true;
+        playBeep();
+        shakeTerminal();
+        var p = document.createElement("div");
+        p.style.color = "#ff3333";
+        p.textContent = "\n[KEYBOARD BUFFER OVERFLOW - SYSTEM BUSY - STAND BY]\n";
+        terminalLog.appendChild(p);
+        terminalLog.scrollTop = terminalLog.scrollHeight;
+        
+        setTimeout(function() {
+          typingLockout = false;
+          terminalInput.disabled = false;
+          terminalInput.focus();
+        }, 900);
+        return;
+      }
+      lastTypeTime = now;
+
+      // Handle Tab Autocomplete
+      if (e.key === "Tab") {
+        e.preventDefault();
+        handleTabComplete();
+        return;
+      }
+
+      // Handle Command Execute on Enter
+      if (e.key === "Enter") {
+        var rawCmd = terminalInput.value;
+        terminalInput.value = "";
+        
+        // Print echo command back to log
+        var echoLine = document.createElement("div");
+        echoLine.textContent = getPathString(currentPath) + " " + rawCmd;
+        terminalLog.appendChild(echoLine);
+        
+        executeCommand(rawCmd.trim());
+      }
+    });
+  }
+}
+
+function handleTabComplete() {
+  var val = terminalInput.value.trim();
+  if (!val) return;
+
+  // 40% chance of cursed tab behavior
+  if (Math.random() < 0.4) {
+    playBeep();
+    var p = document.createElement("div");
+    if (Math.random() < 0.5) {
+      p.style.color = "#ffff33";
+      p.textContent = "[TAB AUTOCOMPLETE IS A PREMIUM FEATURE. PLEASE DEPOSIT 5 SLOP COINS TO UNLOCK.]";
+    } else {
+      // wrong completion
+      var currentDirNode = getNodeAtPath(currentPath);
+      var items = Object.keys(currentDirNode.children || {});
+      if (items.length > 0) {
+        var wrongItem = pickRandom(items);
+        var cmdParts = val.split(" ");
+        cmdParts[cmdParts.length - 1] = wrongItem;
+        terminalInput.value = cmdParts.join(" ");
+        return;
+      }
+    }
+    terminalLog.appendChild(p);
+    terminalLog.scrollTop = terminalLog.scrollHeight;
+    return;
+  }
+
+  // normal tab autocomplete
+  var cmdParts = val.split(" ");
+  var lastWord = cmdParts[cmdParts.length - 1].toLowerCase();
+  if (!lastWord) return;
+
+  var currentDirNode = getNodeAtPath(currentPath);
+  if (!currentDirNode || !currentDirNode.children) return;
+
+  var matches = [];
+  Object.keys(currentDirNode.children).forEach(function(name) {
+    if (name.toLowerCase().indexOf(lastWord) === 0) {
+      matches.push(name);
+    }
+  });
+
+  if (matches.length > 0) {
+    // Autocomplete the first match
+    cmdParts[cmdParts.length - 1] = matches[0];
+    terminalInput.value = cmdParts.join(" ");
+  }
+}
+
+function executeCommand(rawStr) {
+  if (inAdventureGame) {
+    handleAdventureInput(rawStr);
+    return;
+  }
+
+  var parts = rawStr.split(" ");
+  var cmd = parts[0].toLowerCase();
+  var arg = parts.slice(1).join(" ");
+
+  var currentDirNode = getNodeAtPath(currentPath);
+
+  if (!cmd) {
+    return;
+  }
+
+  // Check if command is a file name inside the current directory (executable run)
+  if (currentDirNode && currentDirNode.children && currentDirNode.children[rawStr]) {
+    var fileNode = currentDirNode.children[rawStr];
+    if (fileNode.type === "exe") {
+      var w = document.getElementById(fileNode.windowId);
+      if (w) openWindow(w);
+      if (fileNode.initFn) fileNode.initFn();
+      printBaudText("Executing " + fileNode.name + "...");
+      return;
+    } else if (fileNode.type === "game") {
+      startAdventureGame();
+      return;
+    } else {
+      printBaudText("Error: " + fileNode.name + " is not an executable program.");
+      return;
+    }
+  }
+
+  // Handle standard commands
+  switch (cmd) {
+    case "help":
+      var helpText = [
+        "Available Commands:",
+        "  dir / ls      - List directory contents",
+        "  cd <dir>      - Change directories (cd .. goes up)",
+        "  pwd           - Print working directory path",
+        "  type / cat    - Display text file contents",
+        "  cls / clear   - Clear the display screen",
+        "  echo <text>   - Echo text",
+        "  clippy        - Call ASCII Clippy",
+        "  format c:     - Format system hard drive",
+        "  <program.exe> - Run a program from current folder",
+        ""
+      ].join("\n");
+      printBaudText(helpText);
+      break;
+
+    case "dir":
+    case "ls":
+      if (!currentDirNode || !currentDirNode.children) {
+        printBaudText("Error reading folder tree.");
+        break;
+      }
+      var out = " Directory of " + currentPath.join("\\") + "\n\n";
+      var items = Object.keys(currentDirNode.children);
+      if (items.length === 0) {
+        out += "  No files found.";
+      } else {
+        items.forEach(function(name) {
+          var f = currentDirNode.children[name];
+          if (f.type === "dir") {
+            out += "  <DIR>      " + name + "\n";
+          } else {
+            var size = Math.floor(Math.random() * 800000) + 120;
+            out += "             " + name + " (" + size + " bytes)\n";
+          }
+        });
+      }
+      printBaudText(out + "\n");
+      break;
+
+    case "pwd":
+      printBaudText("Current Path: " + currentPath.join("\\") + "\n");
+      break;
+
+    case "cd":
+      if (!arg) {
+        printBaudText("Usage: cd <directory_name>\n");
+        break;
+      }
+      if (arg === "..") {
+        if (currentPath.length > 1) {
+          currentPath.pop();
+        }
+        terminalPrompt.textContent = getPathString(currentPath);
+        break;
+      }
+
+      // Check relative directory matches
+      if (currentDirNode && currentDirNode.children && currentDirNode.children[arg]) {
+        var node = currentDirNode.children[arg];
+        if (node.type === "dir") {
+          currentPath.push(arg);
+          terminalPrompt.textContent = getPathString(currentPath);
+        } else {
+          playBeep();
+          shakeTerminal();
+          printBaudText("cd: " + arg + ": Not a directory.\n");
+        }
+      } else {
+        playBeep();
+        shakeTerminal();
+        printBaudText("cd: " + arg + ": Directory not found.\n");
+      }
+      break;
+
+    case "type":
+    case "cat":
+      if (!arg) {
+        printBaudText("Usage: type <filename>\n");
+        break;
+      }
+      if (currentDirNode && currentDirNode.children && currentDirNode.children[arg]) {
+        var file = currentDirNode.children[arg];
+        if (file.type === "file") {
+          printBaudText(file.content + "\n");
+        } else if (file.type === "game") {
+          startAdventureGame();
+        } else {
+          printBaudText("Error: cannot view non-text file contents.\n");
+        }
+      } else {
+        playBeep();
+        shakeTerminal();
+        printBaudText("type: " + arg + ": File not found.\n");
+      }
+      break;
+
+    case "cls":
+    case "clear":
+      terminalLog.innerHTML = "";
+      var clsTip = "Screen cleared. (Actually, we just hid the logs behind a couch, don't look too close)\n";
+      printBaudText(clsTip);
+      break;
+
+    case "echo":
+      printBaudText(arg + "\n");
+      break;
+
+    case "clippy":
+      var clippyAscii = [
+        "   /\\_/\\  ",
+        "  ( o.o )   Yo fam, i noticed you are typing in command.com!",
+        "   > ^ <    have you tried using a computer built after 1995?",
+        "  /     \\ ",
+        " (       )  (Type 'exit' to get me out of here)",
+        "  `-----' "
+      ].join("\n");
+      printBaudText(clippyAscii + "\n");
+      break;
+
+    case "format":
+      if (arg.toLowerCase() === "c:") {
+        runFormatC();
+      } else {
+        printBaudText("Usage: format c:\n");
+      }
+      break;
+
+    case "joke":
+      var jokes = [
+        "Why do programmers wear glasses? Because they can't C#.",
+        "There are 10 types of people in this world: those who understand binary, and those who don't.",
+        "How many programmers does it take to change a lightbulb? None, that's a hardware problem.",
+        "A SQL query walks into a bar, walks up to two tables and asks, 'Can I join you?'"
+      ];
+      printBaudText(pickRandom(jokes) + "\n");
+      break;
+
+    default:
+      playBeep();
+      shakeTerminal();
+      printBaudText("Bad command or file name. (Did you spell it correctly? Try spelling it wrong next time)\n");
+      break;
+  }
+}
+
+function runFormatC() {
+  terminalInput.disabled = true;
+  var logList = [
+    "WARNING, ALL DATA ON NON-REMOVABLE DISK",
+    "DRIVE C: WILL BE LOST!",
+    "Proceed with Format (Y/N)? y",
+    "",
+    "Formatting 1.2GB Partition"
+  ];
+  
+  printBaudText(logList.join("\n"), function() {
+    // Add format progress bar
+    var p = document.createElement("div");
+    p.textContent = "[                    ] 0%";
+    terminalLog.appendChild(p);
+    terminalLog.scrollTop = terminalLog.scrollHeight;
+    
+    var progress = 0;
+    var progressInterval = setInterval(function() {
+      progress += 5;
+      var barsCount = Math.floor(progress / 5);
+      var bars = "";
+      for (var i = 0; i < 20; i++) {
+        bars += i < barsCount ? "█" : " ";
+      }
+      p.textContent = "[" + bars + "] " + progress + "%";
+      terminalLog.scrollTop = terminalLog.scrollHeight;
+      
+      if (progress >= 100) {
+        clearInterval(progressInterval);
+        setTimeout(function() {
+          // Trigger hard crash BSOD
+          triggerBSOD("ERROR_C_DRIVE_WIPED_CLEAN");
+        }, 600);
+      }
+    }, 150);
+  });
+}
+
+function startAdventureGame() {
+  inAdventureGame = true;
+  adventureStep = 1;
+  terminalLog.innerHTML = "";
+  
+  var splash = [
+    " ================================================= ",
+    "   SLOPOS COMPILE ADVENTURE - THE TEXT CONSOLE GAME ",
+    " ================================================= ",
+    " Your mission: build and compile SlopOS v0.0.0.67.",
+    " Any compiler crash leads to immediate destruction.",
+    "",
+    " Step 1: The compiler complains that the 'clippy' module",
+    " has a syntax error: \"missing sarcasm in line 23\".",
+    " What do you do?",
+    "   1. Add more sarcasm manually.",
+    "   2. Delete clippy entirely.",
+    "   3. Ignore it and force compile.",
+    "",
+    " Type 1, 2, or 3 and hit Enter:"
+  ].join("\n");
+  
+  printBaudText(splash);
+}
+
+function handleAdventureInput(inputVal) {
+  var choice = inputVal.trim();
+  
+  if (adventureStep === 1) {
+    if (choice === "1") {
+      adventureStep = 2;
+      var nextStepText = [
+        "",
+        " Correct! Clippy is now 400% more sarcastic.",
+        "",
+        " Step 2: A memory leak is detected in the melting paint module.",
+        " What do you do?",
+        "   1. Turn off gravity.",
+        "   2. Limit the canvas to 1x1 pixels.",
+        "   3. Feed the leaked memory to the Feedback can.",
+        "",
+        " Type 1, 2, or 3 and hit Enter:"
+      ].join("\n");
+      printBaudText(nextStepText);
+    } else {
+      triggerAdventureFailure("Clippy got angry because you neglected/tried to delete him, and deleted your boot sector instead!");
+    }
+  } else if (adventureStep === 2) {
+    if (choice === "3") {
+      adventureStep = 3;
+      var finalStepText = [
+        "",
+        " Amazing choice! The feedback can eats the memory leak.",
+        "",
+        " Step 3: The system is ready to compile, but you need to sign",
+        " the license agreement.",
+        " What do you do?",
+        "   1. Read it thoroughly.",
+        "   2. Sell your soul to the Slop Corporation.",
+        "   3. Reject it.",
+        "",
+        " Type 1, 2, or 3 and hit Enter:"
+      ].join("\n");
+      printBaudText(finalStepText);
+    } else {
+      triggerAdventureFailure("The melting paint drips onto the motherboard and shorts the compile stack!");
+    }
+  } else if (adventureStep === 3) {
+    if (choice === "2") {
+      inAdventureGame = false;
+      adventureStep = 0;
+      var winText = [
+        "",
+        " [SUCCESS] SlopOS compiled successfully! ",
+        " You have sold your soul to Slop Corporation.",
+        " You gained: 0 Slop Coins.",
+        " Game Over.",
+        ""
+      ].join("\n");
+      printBaudText(winText, function() {
+        terminalPrompt.textContent = getPathString(currentPath);
+      });
+    } else {
+      triggerAdventureFailure("License rejected! The compiler refuses to work without corporate dominance.");
+    }
+  }
+}
+
+function triggerAdventureFailure(reasonText) {
+  inAdventureGame = false;
+  adventureStep = 0;
+  
+  playBeep();
+  shakeTerminal();
+  
+  var failText = [
+    "",
+    " [COMPILER ERROR] Compilation Failed! ",
+    " Reason: " + reasonText,
+    " Compiler exit code: 0xBAADF00D",
+    " Game Over.",
+    ""
+  ].join("\n");
+  
+  printBaudText(failText, function() {
+    terminalPrompt.textContent = getPathString(currentPath);
   });
 }
 

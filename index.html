@@ -52,6 +52,12 @@
         <p class="icon-text">SlopPaint.exe</p>
       </div>
     </div>
+    <div class="icon" id="terminalOpen">
+      <div class="icon-box">
+        <div class="icon-img">💻</div>
+        <p class="icon-text">command.com</p>
+      </div>
+    </div>
   </div>
 
   <!-- welcome window -->
@@ -325,6 +331,26 @@
     </div>
   </div>
 
+  <!-- terminal window -->
+  <div class="window window-terminal" id="terminalWin" style="display: none; top: calc(50% - 200px); left: calc(50% - 250px);">
+    <div class="win-top" id="terminalWinheader">
+      <p class="win-title">command.com</p>
+      <div class="win-btns">
+        <button type="button" class="win-btn win-min" data-win="terminalWin" title="minimize"></button>
+        <button type="button" class="win-btn win-max" data-win="terminalWin" title="maximize??"></button>
+        <button type="button" class="win-btn win-close" data-win="terminalWin" title="close"></button>
+      </div>
+    </div>
+    <div class="win-body terminal-body" id="terminalBody">
+      <div class="crt-screen-effects"></div>
+      <div class="terminal-log" id="terminalLog"></div>
+      <div class="terminal-input-line">
+        <span class="terminal-prompt" id="terminalPrompt">C:\Desktop&gt;</span>
+        <input type="text" id="terminalInput" class="terminal-input" autofocus autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+  </div>
+
   <!-- clippy -->
   <div class="clippy-box" id="clippyBox">
     <div class="clippy-bubble">
@@ -360,6 +386,7 @@
       <button type="button" class="start-item" data-app="memes">Memes.dll</button>
       <button type="button" class="start-item" data-app="slopsweeper">Slopsweeper.exe</button>
       <button type="button" class="start-item" data-app="sloppypaint">SlopPaint.exe</button>
+      <button type="button" class="start-item" data-app="terminal">command.com</button>
       <button type="button" class="start-item start-item-broken" data-app="updates">Slop Updates</button>
     </div>
   </div>

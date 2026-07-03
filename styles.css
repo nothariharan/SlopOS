@@ -1777,5 +1777,143 @@ body {
   margin-bottom: 8px;
 }
 
+/* Terminal command.com Styling */
+.window-terminal {
+  width: 500px !important;
+  background: #c0c0c0 !important;
+  color: #33ff33 !important;
+  border: 3px solid #ff00ff !important;
+}
+
+.window-terminal .win-title {
+  color: #ffffff !important;
+  font-family: Tahoma, Arial, sans-serif !important;
+}
+
+.window-terminal .win-top {
+  background: linear-gradient(90deg, #555555, #888888) !important; /* dark grey retro header */
+}
+
+.terminal-body {
+  padding: 8px;
+  background: #000000;
+  height: 320px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  border: 4px inset #808080;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 1);
+  border-radius: 4px;
+}
+
+/* scanlines for vintage CRT screen effect */
+.crt-screen-effects {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  background-size: 100% 4px, 6px 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* CRT phosphoresce flicker/animation */
+@keyframes crt-flicker {
+  0% { opacity: 0.985; }
+  50% { opacity: 0.995; }
+  100% { opacity: 0.985; }
+}
+
+.window-terminal .terminal-body {
+  animation: crt-flicker 0.15s infinite;
+}
+
+/* CRT Vignette glass curvature overlay */
+.terminal-body::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.7) 100%);
+  pointer-events: none;
+  z-index: 11;
+}
+
+.terminal-log {
+  flex: 1;
+  overflow-y: auto;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  color: #33ff33;
+  text-shadow: 0 0 5px rgba(51, 255, 51, 0.7);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+/* scrollbar hack for retro green scrollbar */
+.terminal-log::-webkit-scrollbar {
+  width: 8px;
+}
+.terminal-log::-webkit-scrollbar-track {
+  background: #000000;
+}
+.terminal-log::-webkit-scrollbar-thumb {
+  background: #33ff33;
+  border-radius: 2px;
+}
+
+.terminal-input-line {
+  display: flex;
+  align-items: center;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  color: #33ff33;
+  text-shadow: 0 0 5px rgba(51, 255, 51, 0.7);
+  z-index: 12;
+}
+
+.terminal-prompt {
+  white-space: nowrap;
+  margin-right: 6px;
+  user-select: none;
+}
+
+.terminal-input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #33ff33;
+  font-family: inherit;
+  font-size: inherit;
+  outline: none;
+  text-shadow: inherit;
+}
+
+/* CRT physical window shake animation */
+@keyframes terminal-shake {
+  0% { transform: translate(0, 0); }
+  10% { transform: translate(-3px, -2px); }
+  20% { transform: translate(3px, 2px); }
+  30% { transform: translate(-2px, 3px); }
+  40% { transform: translate(2px, -3px); }
+  50% { transform: translate(-1px, 2px); }
+  60% { transform: translate(2px, 1px); }
+  70% { transform: translate(-2px, -1px); }
+  80% { transform: translate(1px, 2px); }
+  90% { transform: translate(-1px, -2px); }
+  100% { transform: translate(0, 0); }
+}
+
+.terminal-shake-active {
+  animation: terminal-shake 0.2s ease-in-out;
+}
+
+
 
 
