@@ -58,6 +58,18 @@
         <p class="icon-text">command.com</p>
       </div>
     </div>
+    <div class="icon" id="myComputerOpen">
+      <div class="icon-box">
+        <div class="icon-img">🖥️</div>
+        <p class="icon-text">My Computer</p>
+      </div>
+    </div>
+    <div class="icon" id="recycleBinOpen">
+      <div class="icon-box">
+        <div class="icon-img">♻️</div>
+        <p class="icon-text">Recycle Bin</p>
+      </div>
+    </div>
   </div>
 
   <!-- welcome window -->
@@ -351,6 +363,172 @@
     </div>
   </div>
 
+  <!-- my computer (the gateway to suffering) -->
+  <div class="window window-classic window-mycomp" id="myComputerWin" style="display: none; top: calc(50% - 180px); left: calc(50% - 200px);">
+    <div class="win-top" id="myComputerWinheader">
+      <p class="win-title">My Computer</p>
+      <div class="win-btns">
+        <button type="button" class="win-btn win-min" data-win="myComputerWin" title="minimize"></button>
+        <button type="button" class="win-btn win-max" data-win="myComputerWin" title="maximize??"></button>
+        <button type="button" class="win-btn win-close" data-win="myComputerWin" title="close"></button>
+      </div>
+    </div>
+    <div class="win-body classic-body mycomp-body">
+      <div class="classic-menubar"><span>File</span><span>Edit</span><span>View</span><span>Help</span></div>
+      <div class="mycomp-grid" id="myCompGrid"></div>
+      <div class="classic-statusbar"><span id="myCompStatus">4 object(s) (probably)</span></div>
+    </div>
+  </div>
+
+  <!-- windows explorer (tree is fake we lied) -->
+  <div class="window window-classic window-explorer" id="explorerWin" style="display: none; top: calc(50% - 190px); left: calc(50% - 240px);">
+    <div class="win-top" id="explorerWinheader">
+      <p class="win-title" id="explorerTitle">Exploring - C:\</p>
+      <div class="win-btns">
+        <button type="button" class="win-btn win-min" data-win="explorerWin" title="minimize"></button>
+        <button type="button" class="win-btn win-max" data-win="explorerWin" title="maximize??"></button>
+        <button type="button" class="win-btn win-close" data-win="explorerWin" title="close"></button>
+      </div>
+    </div>
+    <div class="win-body classic-body explorer-body">
+      <div class="classic-menubar"><span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Favorites</span><span>Help</span></div>
+      <div class="explorer-toolbar">
+        <button type="button" class="classic-tb-btn" id="explorerBack" title="Back">◀</button>
+        <button type="button" class="classic-tb-btn" id="explorerUp" title="Up">▲</button>
+        <span class="explorer-address" id="explorerAddress">C:\</span>
+      </div>
+      <div class="explorer-split">
+        <div class="explorer-tree" id="explorerTree"></div>
+        <div class="explorer-files" id="explorerFiles"></div>
+      </div>
+      <div class="classic-statusbar"><span id="explorerStatus">0 object(s)</span><span class="status-sep">|</span><span>free space: 0.001 KB</span></div>
+    </div>
+  </div>
+
+  <!-- notepad.exe (microsoft quality) -->
+  <div class="window window-classic window-notepad" id="notepadWin" style="display: none; top: calc(50% - 160px); left: calc(50% - 180px);">
+    <div class="win-top" id="notepadWinheader">
+      <p class="win-title" id="notepadTitle">Untitled - Notepad</p>
+      <div class="win-btns">
+        <button type="button" class="win-btn win-min" data-win="notepadWin" title="minimize"></button>
+        <button type="button" class="win-btn win-max" data-win="notepadWin" title="maximize??"></button>
+        <button type="button" class="win-btn win-close" data-win="notepadWin" title="close"></button>
+      </div>
+    </div>
+    <div class="win-body classic-body notepad-body">
+      <div class="classic-menubar notepad-menu">
+        <button type="button" class="menu-fake" data-np="file">File</button>
+        <button type="button" class="menu-fake" data-np="edit">Edit</button>
+        <button type="button" class="menu-fake" data-np="search">Search</button>
+        <button type="button" class="menu-fake" data-np="help">Help</button>
+      </div>
+      <textarea class="notepad-area" id="notepadArea" spellcheck="false"></textarea>
+    </div>
+  </div>
+
+  <!-- calc.exe (math optional) -->
+  <div class="window window-classic window-calc" id="calcWin" style="display: none; top: calc(50% - 150px); left: calc(50% - 110px);">
+    <div class="win-top" id="calcWinheader">
+      <p class="win-title">Calculator</p>
+      <div class="win-btns">
+        <button type="button" class="win-btn win-min" data-win="calcWin" title="minimize"></button>
+        <button type="button" class="win-btn win-max" data-win="calcWin" title="maximize??"></button>
+        <button type="button" class="win-btn win-close" data-win="calcWin" title="close"></button>
+      </div>
+    </div>
+    <div class="win-body classic-body calc-body">
+      <input type="text" class="calc-display" id="calcDisplay" value="0" readonly>
+      <div class="calc-grid" id="calcGrid"></div>
+      <p class="calc-disclaimer">results may be legally wrong</p>
+    </div>
+  </div>
+
+  <!-- recycle bin (where icons go to get duplicated probably) -->
+  <div class="window window-classic window-recycle" id="recycleBinWin" style="display: none; top: calc(50% - 160px); left: calc(50% - 200px);">
+    <div class="win-top" id="recycleBinWinheader">
+      <p class="win-title">Recycle Bin</p>
+      <div class="win-btns">
+        <button type="button" class="win-btn win-min" data-win="recycleBinWin" title="minimize"></button>
+        <button type="button" class="win-btn win-max" data-win="recycleBinWin" title="maximize??"></button>
+        <button type="button" class="win-btn win-close" data-win="recycleBinWin" title="close"></button>
+      </div>
+    </div>
+    <div class="win-body classic-body recycle-body">
+      <div class="classic-menubar"><span>File</span><span>Edit</span><span>View</span><span>Help</span></div>
+      <div class="recycle-toolbar">
+        <button type="button" class="classic-btn" id="recycleEmptyBtn">Empty Recycle Bin</button>
+        <button type="button" class="classic-btn classic-btn-broken" id="recycleRestoreAllBtn">Restore All (broken)</button>
+      </div>
+      <div class="recycle-list" id="recycleList"></div>
+      <div class="classic-statusbar"><span id="recycleStatus">0 item(s) rotting</span></div>
+    </div>
+  </div>
+
+  <!-- control panel (everything in here is a lie) -->
+  <div class="window window-classic window-controlpanel" id="controlPanelWin" style="display: none; top: calc(50% - 170px); left: calc(50% - 210px);">
+    <div class="win-top" id="controlPanelWinheader">
+      <p class="win-title">Control Panel</p>
+      <div class="win-btns">
+        <button type="button" class="win-btn win-min" data-win="controlPanelWin" title="minimize"></button>
+        <button type="button" class="win-btn win-max" data-win="controlPanelWin" title="maximize??"></button>
+        <button type="button" class="win-btn win-close" data-win="controlPanelWin" title="close"></button>
+      </div>
+    </div>
+    <div class="win-body classic-body cpanel-body">
+      <p class="cpanel-hint">pick something to not configure:</p>
+      <div class="cpanel-grid" id="cpanelGrid"></div>
+    </div>
+  </div>
+
+  <!-- run dialog (win+r) -->
+  <div class="classic-dialog-overlay" id="runOverlay" style="display: none;">
+    <div class="classic-dialog run-dialog">
+      <div class="classic-dialog-title">Run</div>
+      <div class="classic-dialog-body">
+        <p class="run-prompt">Type the name of a program, folder, document, or Internet resource, and SlopOS will open it. (maybe)</p>
+        <label class="run-label">Open:</label>
+        <input type="text" class="run-input" id="runInput" autocomplete="off" spellcheck="false">
+        <p class="run-hint" id="runHint"></p>
+      </div>
+      <div class="classic-dialog-foot">
+        <button type="button" class="classic-btn" id="runOkBtn">OK</button>
+        <button type="button" class="classic-btn" id="runCancelBtn">Cancel</button>
+        <button type="button" class="classic-btn classic-btn-broken" id="runBrowseBtn">Browse...</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- shut down windows (start menu classic) -->
+  <div class="classic-dialog-overlay" id="shutdownOverlay" style="display: none;">
+    <div class="classic-dialog shutdown-dialog">
+      <div class="classic-dialog-title">Shut Down Windows</div>
+      <div class="classic-dialog-body shutdown-body">
+        <p>What do you want the computer to do?</p>
+        <label class="shutdown-opt"><input type="radio" name="shutdownPick" value="standby" checked> Stand by</label>
+        <label class="shutdown-opt"><input type="radio" name="shutdownPick" value="shutdown"> Shut down</label>
+        <label class="shutdown-opt"><input type="radio" name="shutdownPick" value="restart"> Restart</label>
+        <label class="shutdown-opt"><input type="radio" name="shutdownPick" value="logoff"> Close all programs and log on as a different user (???)</label>
+      </div>
+      <div class="classic-dialog-foot">
+        <button type="button" class="classic-btn" id="shutdownOkBtn">OK</button>
+        <button type="button" class="classic-btn" id="shutdownCancelBtn">Cancel</button>
+        <button type="button" class="classic-btn" id="shutdownHelpBtn">Help</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- it is now safe to turn off your computer (win98 vibes) -->
+  <div class="safe-shutdown-overlay" id="safeShutdownOverlay" style="display: none;">
+    <p class="safe-shutdown-text">It is now safe to turn off your computer.</p>
+    <p class="safe-shutdown-sub">(just kidding click anywhere we cant actually turn off)</p>
+  </div>
+
+  <!-- standby dim screen -->
+  <div class="standby-overlay" id="standbyOverlay" style="display: none;">
+    <p class="standby-text">zzzz... standby mode...</p>
+    <p class="standby-sub">move mouse to wake up (if u dare)</p>
+  </div>
+
   <!-- clippy -->
   <div class="clippy-box" id="clippyBox">
     <div class="clippy-bubble">
@@ -373,20 +551,39 @@
     <button type="button" class="desktop-menu-btn" id="deskRefresh">refresh desktop</button>
     <button type="button" class="desktop-menu-btn" id="deskNewShortcut">new shortcut</button>
     <button type="button" class="desktop-menu-btn" id="deskSort">sort icons by vibe</button>
+    <button type="button" class="desktop-menu-btn" id="deskClearFeedback">clear feedback files</button>
+  </div>
+
+  <!-- right-click the taskbar, arrange the chaos -->
+  <div class="desktop-menu taskbar-menu" id="taskbarMenu" style="display: none;">
+    <button type="button" class="desktop-menu-btn" id="tbCascade">Cascade Windows</button>
+    <button type="button" class="desktop-menu-btn" id="tbTile">Tile Windows</button>
+    <button type="button" class="desktop-menu-btn" id="tbShowDesktop">Show the Desktop</button>
+    <button type="button" class="desktop-menu-btn" id="tbTaskMgr">Task Manager</button>
   </div>
 
   <!-- start menu -->
   <div class="start-menu" id="startMenu" style="display: none;">
     <p class="start-menu-title">SlopOS v0.0.0.67</p>
     <div class="start-menu-list" id="startMenuList">
+      <button type="button" class="start-item" data-app="mycomputer">My Computer</button>
+      <button type="button" class="start-item start-item-sub" data-app="programs">Programs ▸</button>
+      <div class="start-submenu" id="startProgramsSub" style="display: none;">
+        <button type="button" class="start-item start-item-nested" data-app="notepad">Notepad</button>
+        <button type="button" class="start-item start-item-nested" data-app="calc">Calculator</button>
+        <button type="button" class="start-item start-item-nested" data-app="sloppypaint">SlopPaint.exe</button>
+        <button type="button" class="start-item start-item-nested" data-app="terminal">command.com</button>
+        <button type="button" class="start-item start-item-nested" data-app="slopsweeper">Slopsweeper.exe</button>
+      </div>
+      <button type="button" class="start-item" data-app="controlpanel">Control Panel</button>
+      <button type="button" class="start-item" data-app="taskmgr">Task Manager</button>
       <button type="button" class="start-item" data-app="welcome">Welcome.slop</button>
       <button type="button" class="start-item" data-app="feedback">Feedback.slop</button>
       <button type="button" class="start-item" data-app="trash">Trash.slop</button>
       <button type="button" class="start-item" data-app="ai">AI.exe</button>
       <button type="button" class="start-item" data-app="memes">Memes.dll</button>
-      <button type="button" class="start-item" data-app="slopsweeper">Slopsweeper.exe</button>
-      <button type="button" class="start-item" data-app="sloppypaint">SlopPaint.exe</button>
-      <button type="button" class="start-item" data-app="terminal">command.com</button>
+      <button type="button" class="start-item" data-app="run">Run...</button>
+      <button type="button" class="start-item" data-app="shutdown">Shut Down...</button>
       <button type="button" class="start-item start-item-broken" data-app="updates">Slop Updates</button>
     </div>
   </div>
@@ -396,10 +593,21 @@
     <button type="button" class="start-btn" id="startBtn">start</button>
     <div class="taskbar-apps" id="taskbarApps"></div>
     <div class="system-tray" id="systemTray">
+      <span class="tray-icon" id="trayVolume" title="Volume (allegedly)">🔊</span>
       <span class="tray-icon" id="trayWifi" title="SlopFi - 1 bar">📶</span>
       <span class="tray-icon" id="trayBattery" title="3% forever">🔋</span>
       <span class="tray-clock" id="timeElement">...</span>
     </div>
+  </div>
+
+  <!-- volume flyout that pops up over the tray speaker -->
+  <div class="volume-flyout" id="volumeFlyout" style="display: none;">
+    <p class="volume-flyout-title">Volume</p>
+    <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="70" orient="vertical">
+    <label class="volume-mute-row">
+      <input type="checkbox" id="volumeMute"> Mute
+    </label>
+    <p class="volume-flyout-val" id="volumeVal">70%</p>
   </div>
 
   <!-- spin wheel for delete yes/no -->
@@ -449,8 +657,72 @@
     </div>
   </div>
 
+  <!-- task manager. ctrl+shift+esc, the classic three finger salute -->
+  <div class="window window-classic window-taskmgr" id="taskMgrWin" style="display: none; top: calc(50% - 180px); left: calc(50% - 200px);">
+    <div class="win-top" id="taskMgrWinheader">
+      <p class="win-title">Slop Task Manager</p>
+      <div class="win-btns">
+        <button type="button" class="win-btn win-min" data-win="taskMgrWin" title="minimize"></button>
+        <button type="button" class="win-btn win-max" data-win="taskMgrWin" title="maximize??"></button>
+        <button type="button" class="win-btn win-close" data-win="taskMgrWin" title="close"></button>
+      </div>
+    </div>
+    <div class="win-body classic-body taskmgr-body">
+      <div class="classic-menubar"><span>File</span><span>Options</span><span>View</span><span>Help</span></div>
+      <div class="taskmgr-tabs">
+        <button type="button" class="taskmgr-tab taskmgr-tab-on">Applications</button>
+        <button type="button" class="taskmgr-tab">Processes</button>
+        <button type="button" class="taskmgr-tab">Performance</button>
+      </div>
+      <div class="taskmgr-listhead">
+        <span>Task</span>
+        <span>Status</span>
+      </div>
+      <div class="taskmgr-list" id="taskMgrList"></div>
+      <div class="taskmgr-toolbar">
+        <button type="button" class="classic-btn" id="taskMgrEndBtn">End Task</button>
+        <button type="button" class="classic-btn" id="taskMgrSwitchBtn">Switch To</button>
+        <button type="button" class="classic-btn classic-btn-broken" id="taskMgrNewBtn">New Task...</button>
+      </div>
+      <div class="classic-statusbar taskmgr-status">
+        <span id="taskMgrProcCount">Processes: 0</span>
+        <span id="taskMgrCpu">CPU Usage: 0%</span>
+        <span id="taskMgrMem">Mem: 640K free</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- slop update nag. it will restart your pc, you can only delay the inevitable -->
+  <div class="update-nag" id="updateNag" style="display: none;">
+    <div class="update-nag-top">
+      <span class="update-nag-icon">🛡️</span>
+      <span class="update-nag-title">SlopOS Update</span>
+      <button type="button" class="update-nag-x" id="updateNagX" title="you cannot close this">×</button>
+    </div>
+    <div class="update-nag-body">
+      <p class="update-nag-line">Important updates are ready to be installed for you whether you like it or not.</p>
+      <p class="update-nag-count">Your PC will restart in <span id="updateNagTime">5:00</span></p>
+      <div class="update-nag-btns">
+        <button type="button" class="classic-btn" id="updateNagPostpone">Postpone</button>
+        <button type="button" class="classic-btn classic-btn-broken" id="updateNagNow">Restart Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- screensaver. kicks in when you leave it alone too long -->
+  <div class="screensaver" id="screensaver" style="display: none;">
+    <div class="saver-logo" id="saverLogo">
+      <span class="saver-logo-text">SlopOS</span>
+      <span class="saver-logo-sub">definitely not responding</span>
+    </div>
+    <p class="saver-hint">move the mouse to wake it up (maybe)</p>
+  </div>
+
   <script src="script.js"></script>
 
 </body>
 
 </html>
+
+
+// running out of ideas lowk man 
