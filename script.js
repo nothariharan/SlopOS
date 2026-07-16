@@ -4,6 +4,7 @@ var desktopOpen = document.querySelector("#welcomeDesktopOpen");
 var feedbackOpen = document.getElementById("feedbackOpen");
 var clockEl = document.querySelector("#timeElement");
 var taskbarApps = document.getElementById("taskbarApps");
+var taskbar = document.getElementById("taskbar");
 var taskbarH = 48;
 var slopsweeperWin = document.getElementById("slopsweeper");
 var organizeIconsBtn = document.getElementById("organizeIconsBtn");
@@ -366,6 +367,13 @@ registerWindow("slopsweeper", "Slopsweeper.exe");
 registerWindow("sloppypaint", "SlopPaint.exe");
 registerWindow("memesWin", "Memes.dll");
 registerWindow("terminalWin", "command.com");
+registerWindow("myComputerWin", "My Computer");
+registerWindow("explorerWin", "Exploring - C:\\");
+registerWindow("notepadWin", "Untitled - Notepad");
+registerWindow("calcWin", "Calculator");
+registerWindow("recycleBinWin", "Recycle Bin");
+registerWindow("controlPanelWin", "Control Panel");
+registerWindow("taskMgrWin", "Slop Task Manager");
 wireWinControls();
 
 openWindow(welcomeWin);
@@ -444,6 +452,13 @@ dragElement(document.getElementById("slopsweeper"));
 dragElement(document.getElementById("sloppypaint"));
 dragElement(document.getElementById("memesWin"));
 dragElement(document.getElementById("terminalWin"));
+dragElement(document.getElementById("myComputerWin"));
+dragElement(document.getElementById("explorerWin"));
+dragElement(document.getElementById("notepadWin"));
+dragElement(document.getElementById("calcWin"));
+dragElement(document.getElementById("recycleBinWin"));
+dragElement(document.getElementById("controlPanelWin"));
+dragElement(document.getElementById("taskMgrWin"));
 
 // desktop icons drag delete spin wheel gamble
 
@@ -553,6 +568,16 @@ function tapForSource(sourceKey) {
     return function() {
       openWindow(terminalWin);
       initTerminal();
+    };
+  }
+  if (sourceKey === "myComputerOpen") {
+    return function() {
+      openMyComputer();
+    };
+  }
+  if (sourceKey === "recycleBinOpen") {
+    return function() {
+      openRecycleBin();
     };
   }
   return goRickroll;
@@ -783,6 +808,7 @@ function startDeleteSpin(iconEl, meta) {
 
     if (result === "yes") {
       spinResult.textContent = "yes — deleted lol";
+      addToRecycleBin(meta);
       deleteIcon(iconEl, meta);
     } else {
       spinResult.textContent = "no — duplicated instead hehe";
@@ -830,6 +856,13 @@ document.addEventListener("keydown", function(e) {
     hideIconMenu();
     hideDesktopMenu();
     hideStartMenu();
+    hideRunDialog();
+    hideShutdownDialog();
+  }
+  // win+r opens run dialog. classic windows muscle memory
+  if (e.key === "r" && (e.metaKey || e.ctrlKey)) {
+    e.preventDefault();
+    showRunDialog();
   }
 });
 
@@ -947,6 +980,36 @@ function setupBuiltInIcons() {
     }, startTop + iconDragGap * 7, startLeft);
   } else {
     if (terminalOpen) terminalOpen.remove();
+  }
+
+  var myComputerOpen = document.getElementById("myComputerOpen");
+  if (hidden.indexOf("myComputerOpen") === -1) {
+    registerDesktopIcon(myComputerOpen, {
+      key: "myComputerOpen",
+      kind: "builtin",
+      label: "My Computer",
+      emoji: "🖥️",
+      onTap: function() {
+        openMyComputer();
+      }
+    }, startTop + iconDragGap * 8, startLeft);
+  } else {
+    if (myComputerOpen) myComputerOpen.remove();
+  }
+
+  var recycleBinOpen = document.getElementById("recycleBinOpen");
+  if (hidden.indexOf("recycleBinOpen") === -1) {
+    registerDesktopIcon(recycleBinOpen, {
+      key: "recycleBinOpen",
+      kind: "builtin",
+      label: "Recycle Bin",
+      emoji: "♻️",
+      onTap: function() {
+        openRecycleBin();
+      }
+    }, startTop + iconDragGap * 9, startLeft);
+  } else {
+    if (recycleBinOpen) recycleBinOpen.remove();
   }
 }
 
@@ -1069,6 +1132,9 @@ bootBtn.addEventListener("click", function() {
   finalName.textContent = name;
   entryBox.style.display = "none";
   doneBox.style.display = "block";
+
+  // first real click, so audio is unlocked. welcome to the desktop, here is a chord
+  playStartupJingle();
 
   localStorage.setItem("sloposUser", name);
 });
@@ -1349,6 +1415,22 @@ function loadFeedbackIcons() {
   });
 }
 
+// nuke all feedback paper icons. mouth still works tho
+function clearAllFeedbackFiles() {
+  saveFeedbackFiles([]);
+  localStorage.removeItem("sloposFeedback");
+
+  var keys = Object.keys(iconRegistry);
+  keys.forEach(function(key) {
+    var reg = iconRegistry[key];
+    if (reg && reg.meta && reg.meta.kind === "feedbackFile") {
+      reg.el.remove();
+      delete iconRegistry[key];
+      removeIconPos(key);
+    }
+  });
+}
+
 function migrateOldFeedback() {
   var oldText = localStorage.getItem("sloposFeedback");
   if (!oldText) return;
@@ -1532,6 +1614,7 @@ var desktopMenu = document.getElementById("desktopMenu");
 var deskRefresh = document.getElementById("deskRefresh");
 var deskNewShortcut = document.getElementById("deskNewShortcut");
 var deskSort = document.getElementById("deskSort");
+var deskClearFeedback = document.getElementById("deskClearFeedback");
 var trayWifi = document.getElementById("trayWifi");
 var trayBattery = document.getElementById("trayBattery");
 
@@ -1743,6 +1826,26 @@ startMenuList.addEventListener("click", function(e) {
   } else if (app === "terminal") {
     openWindow(terminalWin);
     initTerminal();
+  } else if (app === "programs") {
+    var sub = document.getElementById("startProgramsSub");
+    if (sub) {
+      sub.style.display = sub.style.display === "block" ? "none" : "block";
+    }
+    return;
+  } else if (app === "mycomputer") {
+    openMyComputer();
+  } else if (app === "notepad") {
+    openNotepad();
+  } else if (app === "calc") {
+    openCalculator();
+  } else if (app === "controlpanel") {
+    openControlPanel();
+  } else if (app === "taskmgr") {
+    openTaskManager();
+  } else if (app === "run") {
+    showRunDialog();
+  } else if (app === "shutdown") {
+    showShutdownDialog();
   } else if (app === "updates") {
     triggerBSOD("ERROR_TOO_MUCH_SLOP_IN_SYSTEM_BUFFER");
   }
@@ -1776,9 +1879,75 @@ deskSort.addEventListener("click", function() {
   organizeDesktopIcons();
 });
 
+if (deskClearFeedback) {
+  deskClearFeedback.addEventListener("click", function() {
+    hideDesktopMenu();
+    clearAllFeedbackFiles();
+  });
+}
+
 if (organizeIconsBtn) {
   organizeIconsBtn.addEventListener("click", organizeDesktopIcons);
 }
+
+// volume tray — the slider actually drives the master gain
+var trayVolume = document.getElementById("trayVolume");
+var volumeFlyout = document.getElementById("volumeFlyout");
+var volumeSlider = document.getElementById("volumeSlider");
+var volumeMute = document.getElementById("volumeMute");
+var volumeVal = document.getElementById("volumeVal");
+
+function updateSpeakerIcon() {
+  if (slopMuted || slopVolume <= 0) {
+    trayVolume.textContent = "🔇";
+    trayVolume.classList.add("tray-muted");
+  } else if (slopVolume < 0.5) {
+    trayVolume.textContent = "🔉";
+    trayVolume.classList.remove("tray-muted");
+  } else {
+    trayVolume.textContent = "🔊";
+    trayVolume.classList.remove("tray-muted");
+  }
+}
+
+function applyVolume() {
+  var pct = parseInt(volumeSlider.value, 10);
+  slopVolume = pct / 100;
+  volumeVal.textContent = pct + "%";
+  updateSpeakerIcon();
+}
+
+trayVolume.addEventListener("click", function(e) {
+  e.stopPropagation();
+  var showing = volumeFlyout.style.display === "flex";
+  volumeFlyout.style.display = showing ? "none" : "flex";
+});
+
+volumeSlider.addEventListener("input", function() {
+  if (slopMuted) {
+    slopMuted = false;
+    volumeMute.checked = false;
+  }
+  applyVolume();
+  // little test blip so you hear what you picked, classic windows move
+  playTone(660, 0.12, "sine", 0, 0.09);
+});
+
+volumeMute.addEventListener("change", function() {
+  slopMuted = volumeMute.checked;
+  updateSpeakerIcon();
+  if (!slopMuted) playTone(660, 0.12, "sine", 0, 0.09);
+});
+
+// clicking anywhere else tucks the flyout away
+document.addEventListener("click", function(e) {
+  if (volumeFlyout.style.display === "flex" &&
+      !volumeFlyout.contains(e.target) && e.target !== trayVolume) {
+    volumeFlyout.style.display = "none";
+  }
+});
+
+applyVolume();
 
 trayWifi.addEventListener("click", function() {
   alert("connected to SlopFi_5G. trust.");
@@ -1787,6 +1956,116 @@ trayWifi.addEventListener("click", function() {
 trayBattery.addEventListener("click", function() {
   alert("3% — good luck");
 });
+
+
+// taskbar right-click menu — cascade, tile, show desktop, the arrange-o-matic
+var taskbarMenu = document.getElementById("taskbarMenu");
+var tbCascade = document.getElementById("tbCascade");
+var tbTile = document.getElementById("tbTile");
+var tbShowDesktop = document.getElementById("tbShowDesktop");
+var tbTaskMgr = document.getElementById("tbTaskMgr");
+var desktopHidden = false; // toggle state for show the desktop
+
+function hideTaskbarMenu() {
+  if (taskbarMenu) taskbarMenu.style.display = "none";
+}
+
+// the windows that are actually on screen right now (open, not minimized, not closed)
+function getVisibleWindows() {
+  var out = [];
+  Object.keys(managedWindows).forEach(function(id) {
+    var w = managedWindows[id];
+    if (w.taskBtn && !w.minimized && w.el.style.display !== "none") {
+      out.push(w);
+    }
+  });
+  return out;
+}
+
+// stack them stepping down-right from the corner, classic cascade
+function cascadeWindows() {
+  var wins = getVisibleWindows();
+  var offset = 0;
+  wins.forEach(function(w) {
+    // drop out of maximized so the sizes make sense
+    w.el.classList.remove("win-maxed");
+    w.maximized = false;
+    w.el.style.width = "";
+    w.el.style.height = "";
+    w.el.style.top = (30 + offset) + "px";
+    w.el.style.left = (30 + offset) + "px";
+    bringToFront(w.el);
+    offset += 28;
+  });
+}
+
+// chop the screen into a grid and jam one window in each cell
+function tileWindows() {
+  var wins = getVisibleWindows();
+  var n = wins.length;
+  if (n === 0) return;
+
+  var cols = Math.ceil(Math.sqrt(n));
+  var rows = Math.ceil(n / cols);
+  var areaW = window.innerWidth;
+  var areaH = window.innerHeight - taskbarH;
+  var cellW = Math.floor(areaW / cols);
+  var cellH = Math.floor(areaH / rows);
+
+  wins.forEach(function(w, i) {
+    var c = i % cols;
+    var r = Math.floor(i / cols);
+    w.el.classList.remove("win-maxed");
+    w.maximized = false;
+    w.el.style.left = (c * cellW) + "px";
+    w.el.style.top = (r * cellH) + "px";
+    w.el.style.width = (cellW - 6) + "px";
+    w.el.style.height = (cellH - 6) + "px";
+  });
+}
+
+// minimize everything, then a second call brings it all back
+function toggleShowDesktop() {
+  if (!desktopHidden) {
+    getVisibleWindows().forEach(function(w) {
+      minimizeWindow(w.el);
+    });
+    desktopHidden = true;
+  } else {
+    Object.keys(managedWindows).forEach(function(id) {
+      var w = managedWindows[id];
+      if (w.taskBtn && w.minimized) {
+        restoreWindow(w.el);
+      }
+    });
+    desktopHidden = false;
+  }
+}
+
+if (taskbar) {
+  taskbar.addEventListener("contextmenu", function(e) {
+    // dont hijack the right click on the open-window buttons themselves
+    if (e.target.closest(".task-btn")) return;
+    e.preventDefault();
+    hideStartMenu();
+    hideDesktopMenu();
+
+    taskbarMenu.style.display = "block";
+    // clamp so it sits just above the taskbar and never off the right edge
+    var menuW = 170;
+    var x = Math.min(e.clientX, window.innerWidth - menuW);
+    taskbarMenu.style.left = Math.max(0, x) + "px";
+    taskbarMenu.style.top = "";
+    taskbarMenu.style.bottom = (taskbarH + 2) + "px";
+  });
+}
+
+tbCascade.addEventListener("click", function() { hideTaskbarMenu(); cascadeWindows(); });
+tbTile.addEventListener("click", function() { hideTaskbarMenu(); tileWindows(); });
+tbShowDesktop.addEventListener("click", function() { hideTaskbarMenu(); toggleShowDesktop(); });
+tbTaskMgr.addEventListener("click", function() { hideTaskbarMenu(); openTaskManager(); });
+
+document.addEventListener("click", hideTaskbarMenu);
 
 // ==========================================
 // SLOP-SWEEPER.EXE GAME ENGINE (peak code design)
@@ -2134,8 +2413,13 @@ function gameOver(won, boomR, boomC) {
   }
 }
 
-migrateOldFeedback();
-loadFeedbackIcons();
+// one-time purge bc desktop was drowning in feedback papers
+if (!localStorage.getItem("sloposFeedbackPurged")) {
+  clearAllFeedbackFiles();
+  localStorage.setItem("sloposFeedbackPurged", "yep");
+} else {
+  loadFeedbackIcons();
+}
 
 // ==========================================
 // SLOP-PAINT.EXE APPLICATION ENGINE (true masterpieces only)
@@ -2708,7 +2992,34 @@ function startBiosReboot() {
   biosView.style.display = "block";
   biosLog.innerHTML = "";
 
-                    // hard refresh to clear the slop and start fresh
+  // print lines with a retro delay so it feels like a 90s machine booting
+  function printLine(text, delay, callback) {
+    setTimeout(function() {
+      var p = document.createElement("div");
+      p.className = "bios-line";
+      p.textContent = text;
+      biosLog.appendChild(p);
+      if (callback) callback();
+    }, delay);
+  }
+
+  printLine("CPU: Slop-Pro (TM) at 33 MHz", 200, function() {
+    printLine("Detecting IDE Primary Master ... SLOP-DRIVE-200MB", 400, function() {
+      printLine("Detecting IDE Primary Slave  ... NONE", 300, function() {
+        var p = document.createElement("div");
+        p.className = "bios-line";
+        biosLog.appendChild(p);
+
+        var ramCount = 0;
+        var ramInterval = setInterval(function() {
+          ramCount += 4096;
+          p.textContent = "Memory Test: " + ramCount + "KB OK";
+          if (ramCount >= 65536) {
+            clearInterval(ramInterval);
+            printLine("Floppy drive A: Found (3.5\" 1.44MB)", 400, function() {
+              printLine("Loading Boot Sector from C: ... OK", 400, function() {
+                printLine("Starting SlopOS...", 300, function() {
+                  setTimeout(function() {
                     window.location.reload();
                   }, 800);
                 });
@@ -2722,7 +3033,7 @@ function startBiosReboot() {
 }
 
 // ==========================================
-// CLUNKY TERMINAL (command.com) ENGINE
+// CLUNKY TERMINAL (command.com) ENGINE - shitty as of now mite improve it but eh 
 // ==========================================
 
 var terminalWin = document.getElementById("terminalWin");
@@ -2750,7 +3061,22 @@ var virtualFS = {
           "Memes.dll": { type: "exe", name: "Memes.dll", windowId: "memesWin", initFn: function() { initMemes(); } },
           "Slopsweeper.exe": { type: "exe", name: "Slopsweeper.exe", windowId: "slopsweeper", initFn: function() { initSlopsweeper(); } },
           "SlopPaint.exe": { type: "exe", name: "SlopPaint.exe", windowId: "sloppypaint", initFn: function() { initSlopPaint(); } },
-          "command.com": { type: "exe", name: "command.com", windowId: "terminalWin", initFn: function() { initTerminal(); } }
+          "command.com": { type: "exe", name: "command.com", windowId: "terminalWin", initFn: function() { initTerminal(); } },
+          "notepad.exe": { type: "exe", name: "notepad.exe", windowId: "notepadWin", initFn: function() { openNotepad(); } },
+          "calc.exe": { type: "exe", name: "calc.exe", windowId: "calcWin", initFn: function() { openCalculator(); } }
+        }
+      },
+      "Program Files": {
+        type: "dir",
+        name: "Program Files",
+        children: {
+          "SlopCorp": {
+            type: "dir",
+            name: "SlopCorp",
+            children: {
+              "license.txt": { type: "file", name: "license.txt", content: "BY USING SLOPOS YOU AGREE TO ALL TERMS INCLUDING THE ONES WE HAVENT WRITTEN YET." }
+            }
+          }
         }
       },
       "Windows": {
@@ -2796,27 +3122,65 @@ function getPathString(pathArr) {
   return pathArr.join("\\") + ">";
 }
 
-function playBeep() {
+// one shared audio context and a master volume everything runs through
+var slopAudioCtx = null;
+var slopVolume = 0.7; // 0..1, driven by the tray slider
+var slopMuted = false;
+
+function getAudioCtx() {
   try {
     var AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    var audioCtx = new AudioCtx();
-    var oscillator = audioCtx.createOscillator();
-    var gainNode = audioCtx.createGain();
-    
-    oscillator.type = "square"; // retro PC speaker sound
-    oscillator.frequency.value = 140; // low buzzing fail sound
-    gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    
-    oscillator.start();
-    oscillator.stop(audioCtx.currentTime + 0.25);
+    if (!AudioCtx) return null;
+    if (!slopAudioCtx) slopAudioCtx = new AudioCtx();
+    return slopAudioCtx;
   } catch (e) {
-    console.error("Audio beep failed", e);
+    return null;
   }
+}
+
+// play a single tone. gain gets scaled by the master volume so the slider actually does something
+function playTone(freq, dur, type, when, peak) {
+  var ctx = getAudioCtx();
+  if (!ctx) return;
+  if (slopMuted || slopVolume <= 0) return;
+
+  var t0 = ctx.currentTime + (when || 0);
+  var osc = ctx.createOscillator();
+  var gain = ctx.createGain();
+
+  osc.type = type || "square";
+  osc.frequency.value = freq;
+
+  var vol = (peak || 0.08) * slopVolume;
+  gain.gain.setValueAtTime(0.0001, t0);
+  gain.gain.exponentialRampToValueAtTime(vol, t0 + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(t0);
+  osc.stop(t0 + dur + 0.02);
+}
+
+function playBeep() {
+  // the classic low buzzing fail beep, now volume aware
+  playTone(140, 0.25, "square", 0, 0.08);
+}
+
+// cheerful little four note rise. plays when the desktop first shows up
+function playStartupJingle() {
+  var notes = [523, 659, 784, 1046]; // C E G C, the it just works chord
+  notes.forEach(function(n, i) {
+    playTone(n, 0.28, "triangle", i * 0.16, 0.09);
+  });
+}
+
+// sad falling ta-daa for shutdown
+function playShutdownJingle() {
+  var notes = [784, 587, 440, 330];
+  notes.forEach(function(n, i) {
+    playTone(n, 0.3, "triangle", i * 0.18, 0.09);
+  });
 }
 
 function shakeTerminal() {
@@ -3323,4 +3687,1077 @@ function triggerAdventureFailure(reasonText) {
     terminalPrompt.textContent = getPathString(currentPath);
   });
 }
+
+
+// ==========================================
+// CLASSIC WINDOWS STUFF (95/98/XP but wrong)
+// microsoft pls dont sue we have no money
+// ==========================================
+
+var myComputerWin = document.getElementById("myComputerWin");
+var explorerWin = document.getElementById("explorerWin");
+var notepadWin = document.getElementById("notepadWin");
+var calcWin = document.getElementById("calcWin");
+var recycleBinWin = document.getElementById("recycleBinWin");
+var controlPanelWin = document.getElementById("controlPanelWin");
+var notepadArea = document.getElementById("notepadArea");
+var notepadTitle = document.getElementById("notepadTitle");
+var calcDisplay = document.getElementById("calcDisplay");
+var calcGrid = document.getElementById("calcGrid");
+var explorerFiles = document.getElementById("explorerFiles");
+var explorerTree = document.getElementById("explorerTree");
+var explorerAddress = document.getElementById("explorerAddress");
+var explorerStatus = document.getElementById("explorerStatus");
+var explorerTitle = document.getElementById("explorerTitle");
+var recycleList = document.getElementById("recycleList");
+var runOverlay = document.getElementById("runOverlay");
+var runInput = document.getElementById("runInput");
+var shutdownOverlay = document.getElementById("shutdownOverlay");
+var safeShutdownOverlay = document.getElementById("safeShutdownOverlay");
+var standbyOverlay = document.getElementById("standbyOverlay");
+
+var explorerPath = ["C:"];
+var explorerHistory = [];
+var notepadDirty = false;
+var notepadFileName = "Untitled";
+var calcValue = "0";
+var calcPrev = null;
+var calcOp = null;
+var classicWired = false;
+
+// recycle bin storage bc we pretend to care about the environment
+function getRecycleBin() {
+  return JSON.parse(localStorage.getItem("sloposRecycleBin") || "[]");
+}
+
+function saveRecycleBin(items) {
+  localStorage.setItem("sloposRecycleBin", JSON.stringify(items));
+  updateRecycleBinIconLook();
+}
+
+function addToRecycleBin(meta) {
+  if (meta.kind === "cookie") return;
+  var bin = getRecycleBin();
+  bin.push({
+    label: meta.label,
+    emoji: resolveEmoji(meta),
+    key: meta.key,
+    sourceKey: meta.sourceKey || meta.key,
+    kind: meta.kind,
+    builtinKind: meta.builtinKind || meta.kind,
+    deletedAt: Date.now()
+  });
+  saveRecycleBin(bin);
+}
+
+function updateRecycleBinIconLook() {
+  var binIcon = document.getElementById("recycleBinOpen");
+  if (!binIcon) return;
+  var img = binIcon.querySelector(".icon-img");
+  if (!img) return;
+  var count = getRecycleBin().length;
+  img.textContent = count > 0 ? "🗑️" : "♻️";
+}
+
+// figure out what emoji an fs node gets. very scientific
+function getFsIcon(node) {
+  if (!node) return "❓";
+  if (node.type === "dir") return "📁";
+  if (node.type === "exe") return "⚙️";
+  if (node.type === "game") return "🎮";
+  if (node.name && node.name.indexOf(".dll") !== -1) return "🐸";
+  if (node.name && node.name.indexOf(".ini") !== -1) return "⚙️";
+  return "📄";
+}
+
+// open exes/files from explorer. shared brain cell
+function launchVirtualItem(node, pathArr) {
+  if (!node) {
+    playBeep();
+    alert("SlopOS cannot find the file. (it was never there)");
+    return;
+  }
+
+  if (node.type === "dir") {
+    explorerHistory.push(explorerPath.slice());
+    openExplorerAt(pathArr);
+    return;
+  }
+
+  if (node.type === "exe") {
+    var winEl = document.getElementById(node.windowId);
+    if (winEl) {
+      openWindow(winEl);
+      if (node.initFn) node.initFn();
+    }
+    return;
+  }
+
+  if (node.type === "game" && node.name === "Adventure.slop") {
+    openWindow(terminalWin);
+    initTerminal();
+    setTimeout(function() {
+      startAdventureGame();
+    }, 400);
+    return;
+  }
+
+  if (node.type === "file") {
+    openNotepad(node.name, node.content || "");
+    return;
+  }
+
+  playBeep();
+  alert("Windows cannot open this program.\n\nLICENCE_NOT_FOUND");
+}
+
+// --- MY COMPUTER (the holy grail of 1998) ---
+
+function openMyComputer() {
+  openWindow(myComputerWin);
+  renderMyComputer();
+}
+
+function renderMyComputer() {
+  var grid = document.getElementById("myCompGrid");
+  var status = document.getElementById("myCompStatus");
+  if (!grid) return;
+
+  // these are hardcoded bc my computer never lied (it did)
+  var items = [
+    { label: "3½ Floppy (A:)", icon: "💾", broken: true, action: function() {
+      alert("The device is not ready.\n\nNo floppy disk in drive A:.\n\n(there never will be)");
+    }},
+    { label: "(C:)", icon: "💽", action: function() {
+      openExplorerAt(["C:"]);
+    }},
+    { label: "CD-ROM (D:)", icon: "📀", broken: true, action: function() {
+      alert("Please insert a disc into drive D:\n\n...still waiting...\n\n...any day now...");
+    }},
+    { label: "Control Panel", icon: "🎛️", action: openControlPanel },
+    { label: "Recycle Bin", icon: getRecycleBin().length > 0 ? "🗑️" : "♻️", action: openRecycleBin },
+    { label: "Network Neighborhood", icon: "🌐", broken: true, action: function() {
+      alert("Network cable unplugged.\nSlopFi adapter: DISCONNECTED\n\nhave u tried turning it off and on");
+    }}
+  ];
+
+  grid.innerHTML = "";
+  items.forEach(function(item) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "mycomp-item" + (item.broken ? " mycomp-item-broken" : "");
+    btn.innerHTML = '<span class="mycomp-icon">' + item.icon + '</span><span>' + item.label + '</span>';
+    btn.addEventListener("click", item.action);
+    grid.appendChild(btn);
+  });
+
+  if (status) {
+    status.textContent = items.length + " object(s) (probably)";
+  }
+}
+
+// --- EXPLORER (tree is decorative. shhh.) ---
+
+function openExplorerAt(pathArr) {
+  explorerPath = pathArr.slice();
+  openWindow(explorerWin);
+  renderExplorer();
+}
+
+function renderExplorer() {
+  if (!explorerFiles) return;
+
+  var node = getNodeAtPath(explorerPath);
+  var pathStr = explorerPath.join("\\");
+  if (explorerPath.length === 1) pathStr = "C:\\";
+
+  if (explorerAddress) explorerAddress.textContent = pathStr;
+  if (explorerTitle) explorerTitle.textContent = "Exploring - " + pathStr;
+  if (managedWindows.explorerWin) managedWindows.explorerWin.title = explorerTitle.textContent;
+
+  // fake tree. looks like a tree. is lies.
+  if (explorerTree) {
+    explorerTree.innerHTML = "";
+    var treePaths = [
+      ["C:"],
+      ["C:", "Desktop"],
+      ["C:", "Windows"],
+      ["C:", "Program Files"]
+    ];
+    treePaths.forEach(function(tp) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "tree-item";
+      var label = tp.join("\\");
+      if (tp.length === 1) label = "C:\\";
+      btn.textContent = "📁 " + label;
+      if (tp.join("/") === explorerPath.join("/")) {
+        btn.classList.add("tree-active");
+      }
+      btn.addEventListener("click", function() {
+        explorerHistory.push(explorerPath.slice());
+        openExplorerAt(tp);
+      });
+      explorerTree.appendChild(btn);
+    });
+  }
+
+  explorerFiles.innerHTML = "";
+
+  if (!node || node.type !== "dir" || !node.children) {
+    explorerFiles.innerHTML = '<p style="font-size:11px;color:#800000;">folder not found. skill issue.</p>';
+    if (explorerStatus) explorerStatus.textContent = "0 object(s)";
+    return;
+  }
+
+  var names = Object.keys(node.children).sort();
+  names.forEach(function(name) {
+    var child = node.children[name];
+    var childPath = explorerPath.concat([name]);
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "explorer-file-item";
+    btn.innerHTML = '<span class="explorer-file-icon">' + getFsIcon(child) + '</span><span>' + name + '</span>';
+    btn.addEventListener("dblclick", function() {
+      launchVirtualItem(child, childPath);
+    });
+  btn.addEventListener("click", function() {
+      // single click does nothing useful. just like real windows 95
+      if (explorerStatus) explorerStatus.textContent = "1 object(s) selected (maybe)";
+    });
+    explorerFiles.appendChild(btn);
+  });
+
+  if (explorerStatus) {
+    explorerStatus.textContent = names.length + " object(s)";
+  }
+}
+
+// --- NOTEPAD (professional word processing) ---
+
+function openNotepad(name, content) {
+  openWindow(notepadWin);
+  notepadFileName = name || "Untitled";
+  notepadDirty = false;
+  if (notepadTitle) {
+    notepadTitle.textContent = notepadFileName + " - Notepad";
+  }
+  if (managedWindows.notepadWin) {
+    managedWindows.notepadWin.title = notepadTitle.textContent;
+  }
+  if (notepadArea) {
+    notepadArea.value = content || "";
+    notepadArea.classList.remove("corrupted");
+  }
+}
+
+function openNotepadWithContent(name, content) {
+  openNotepad(name, content);
+}
+
+// --- CALCULATOR (math optional) ---
+
+function openCalculator() {
+  openWindow(calcWin);
+  if (!calcGrid || calcGrid.dataset.wired) return;
+
+  calcGrid.dataset.wired = "true";
+  var keys = [
+    "7", "8", "9", "/",
+    "4", "5", "6", "*",
+    "1", "2", "3", "-",
+  "0", ".", "=", "+"
+  ];
+
+  keys.forEach(function(k) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "calc-key";
+    btn.textContent = k;
+    btn.addEventListener("click", function() {
+      handleCalcKey(k);
+    });
+    calcGrid.appendChild(btn);
+  });
+
+  var clearBtn = document.createElement("button");
+  clearBtn.type = "button";
+  clearBtn.className = "calc-key calc-key-wide";
+  clearBtn.textContent = "C";
+  clearBtn.addEventListener("click", function() {
+    calcValue = "0";
+    calcPrev = null;
+    calcOp = null;
+    if (calcDisplay) calcDisplay.value = "0";
+  });
+  calcGrid.appendChild(clearBtn);
+}
+
+function handleCalcKey(k) {
+  if (!calcDisplay) return;
+
+  if (k >= "0" && k <= "9" || k === ".") {
+    if (calcValue === "0" && k !== ".") {
+      calcValue = k;
+    } else {
+      calcValue += k;
+    }
+    calcDisplay.value = calcValue;
+    return;
+  }
+
+  if (k === "=") {
+    if (calcPrev !== null && calcOp) {
+      var a = parseFloat(calcPrev);
+      var b = parseFloat(calcValue);
+      var result = 0;
+
+      if (calcOp === "+") result = a + b;
+      else if (calcOp === "-") result = a - b;
+      else if (calcOp === "*") result = a * b;
+      else if (calcOp === "/") result = b === 0 ? Infinity : a / b;
+
+      // 30% chance wrong answer. authentic windows experience
+      if (Math.random() < 0.3) {
+        result = result + (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 9) + 1);
+        if (calcDisplay) calcDisplay.style.color = "#800000";
+        setTimeout(function() {
+          if (calcDisplay) calcDisplay.style.color = "#000";
+        }, 800);
+      }
+
+      calcValue = String(result);
+      if (calcValue.length > 10) calcValue = "E+" + Math.floor(Math.random() * 99);
+      calcDisplay.value = calcValue;
+      calcPrev = null;
+      calcOp = null;
+    }
+    return;
+  }
+
+  // operator
+  calcPrev = calcValue;
+  calcValue = "0";
+  calcOp = k;
+}
+
+// --- RECYCLE BIN (landfill simulator) ---
+
+function openRecycleBin() {
+  openWindow(recycleBinWin);
+  renderRecycleBin();
+}
+
+function renderRecycleBin() {
+  if (!recycleList) return;
+  var bin = getRecycleBin();
+  recycleList.innerHTML = "";
+
+  if (bin.length === 0) {
+    recycleList.innerHTML = '<p class="recycle-empty-msg">Recycle Bin is empty.\n\nfor now.</p>';
+  } else {
+    bin.forEach(function(item, idx) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "recycle-item";
+      btn.innerHTML = '<span style="font-size:28px">' + item.emoji + '</span><span>' + item.label + '</span>';
+      btn.addEventListener("click", function() {
+        // restore is broken 50% of the time. eco friendly
+        if (Math.random() < 0.5) {
+          alert("Cannot restore " + item.label + ".\n\nFile is corrupted by slop.");
+          return;
+        }
+        var newBin = getRecycleBin();
+        var restored = newBin.splice(idx, 1)[0];
+        saveRecycleBin(newBin);
+
+        var hidden = getHiddenIcons().filter(function(k) {
+          return k !== restored.key;
+        });
+        localStorage.setItem("sloposHiddenIcons", JSON.stringify(hidden));
+
+        // respawn if builtin got deleted
+        if (restored.kind === "builtin" || restored.kind === "decoy") {
+          location.reload(); // lazy restore. works tho
+          return;
+        }
+
+        renderRecycleBin();
+        alert(restored.label + " restored!\n\n(jk its probably fine)");
+      });
+      recycleList.appendChild(btn);
+    });
+  }
+
+  var st = document.getElementById("recycleStatus");
+  if (st) st.textContent = bin.length + " item(s) rotting";
+}
+
+// --- CONTROL PANEL (everything is placebo) ---
+
+function openControlPanel() {
+  openWindow(controlPanelWin);
+  var grid = document.getElementById("cpanelGrid");
+  if (!grid || grid.dataset.wired) return;
+
+  grid.dataset.wired = "true";
+  var applets = [
+    { icon: "🖼️", name: "Display", action: function() {
+      alert("Display Properties\n\nWallpaper: slop.jpg\nResolution: yes\nColor: too many\n\n[Apply] does nothing\n[OK] also does nothing");
+    }},
+    { icon: "🖱️", name: "Mouse", action: function() {
+      alert("Mouse Properties\n\nPointer speed: ████████░░ (unadjustable)\nDouble-click speed: too fast");
+    }},
+    { icon: "🔊", name: "Sounds", action: function() {
+      playBeep();
+      alert("*BEEP*\n\nThat was the sound preview. ur welcome.");
+    }},
+    { icon: "📦", name: "Add/Remove Programs", action: function() {
+      alert("Installed Programs:\n\n- SlopOS v0.0.0.67 (required)\n- Clippy (cannot uninstall)\n- Regret (system component)");
+    }},
+    { icon: "⚙️", name: "System", action: function() {
+      showWinver();
+    }},
+    { icon: "📅", name: "Date/Time", action: function() {
+      alert("Date/Time Properties\n\nCurrent time: " + new Date().toLocaleString() + "\n\nTime zone: Slop Standard Time (SST)\n\n[OK] sets wrong time");
+    }}
+  ];
+
+  applets.forEach(function(app) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "cpanel-item";
+    btn.innerHTML = '<span class="cpanel-item-icon">' + app.icon + '</span><span>' + app.name + '</span>';
+    btn.addEventListener("click", app.action);
+    grid.appendChild(btn);
+  });
+}
+
+function showWinver() {
+  var old = document.querySelector(".winver-popup");
+  if (old) old.remove();
+
+  var pop = document.createElement("div");
+  pop.className = "winver-popup";
+  pop.style.top = "30%";
+  pop.style.left = "35%";
+  pop.innerHTML =
+    "<h3>About SlopOS</h3>" +
+    "<p>Microsoft Windows... wait no</p>" +
+    "<p><b>SlopOS</b><br>Version 0.0.0.67 (Build 1995)</p>" +
+    "<p>Copyright © Slop Corporation.<br>All rights reversed.</p>" +
+    "<p>This product is licensed to:<br><b>u (probably)</b></p>" +
+    "<p style='font-size:9px;color:#808080'>Physical memory: 64MB<br>Virtual memory: vibes</p>" +
+    '<button type="button" class="classic-btn winver-ok">OK</button>';
+  document.body.appendChild(pop);
+  pop.querySelector(".winver-ok").addEventListener("click", function() {
+    pop.remove();
+  });
+}
+
+// --- RUN DIALOG (win+r) ---
+
+function showRunDialog() {
+  if (!runOverlay) return;
+  runOverlay.style.display = "flex";
+  if (runInput) {
+    runInput.value = "";
+    runInput.focus();
+  }
+  var hint = document.getElementById("runHint");
+  if (hint) hint.textContent = "";
+}
+
+function hideRunDialog() {
+  if (runOverlay) runOverlay.style.display = "none";
+}
+
+function executeRun(cmd) {
+  var raw = (cmd || "").trim();
+  var lower = raw.toLowerCase();
+  hideRunDialog();
+
+  if (!raw) {
+    playBeep();
+    return;
+  }
+
+  // map classic run commands to slop
+  if (lower === "rickroll" || lower === "never gonna give you up") {
+    goRickroll();
+    return;
+  }
+  if (lower === "cmd" || lower === "command.com" || lower === "command") {
+    openWindow(terminalWin);
+    initTerminal();
+    return;
+  }
+  if (lower === "notepad" || lower === "notepad.exe") {
+    openNotepad();
+    return;
+  }
+  if (lower === "calc" || lower === "calc.exe" || lower === "calculator") {
+    openCalculator();
+    return;
+  }
+  if (lower === "mspaint" || lower === "sloppaint" || lower === "sloppaint.exe") {
+    openWindow(sloppypaintWin);
+    initSlopPaint();
+    return;
+  }
+  if (lower === "memes.dll" || lower === "memes") {
+    openWindow(memesWin);
+    initMemes();
+    return;
+  }
+  if (lower === "explorer" || lower === "explorer.exe") {
+    openExplorerAt(["C:", "Desktop"]);
+    return;
+  }
+  if (lower === "control" || lower === "control panel") {
+    openControlPanel();
+    return;
+  }
+  if (lower === "winver") {
+    showWinver();
+    return;
+  }
+  if (lower === "shutdown" || lower === "shut down") {
+    showShutdownDialog();
+    return;
+  }
+  if (lower.indexOf("format") !== -1) {
+    triggerBSOD("ERROR_DRIVE_FORMAT_IMMINENT");
+    return;
+  }
+  if (lower === "clippy") {
+    showClippyAgain();
+    return;
+  }
+
+  // 20% chance any unknown command works and opens notepad with the command as text
+  if (Math.random() < 0.2) {
+    openNotepad(raw + ".txt", "u typed: " + raw + "\n\nidk what this is but slopos opened it anyway");
+    return;
+  }
+
+  playBeep();
+  alert("Windows cannot find '" + raw + "'.\n\nMake sure you typed the name correctly, and then try again.\n\n(or dont. we dont care)");
+}
+
+// --- SHUT DOWN DIALOG ---
+
+function showShutdownDialog() {
+  if (shutdownOverlay) shutdownOverlay.style.display = "flex";
+}
+
+function hideShutdownDialog() {
+  if (shutdownOverlay) shutdownOverlay.style.display = "none";
+}
+
+function executeShutdown() {
+  var pick = document.querySelector('input[name="shutdownPick"]:checked');
+  var mode = pick ? pick.value : "standby";
+  hideShutdownDialog();
+  hideStartMenu();
+
+  // every exit route gets the sad falling ta-daa
+  if (mode === "restart" || mode === "shutdown" || mode === "standby") {
+    playShutdownJingle();
+  }
+
+  if (mode === "restart") {
+    triggerBSOD("ERROR_USER_REQUESTED_RESTART");
+    return;
+  }
+
+  if (mode === "shutdown") {
+    if (safeShutdownOverlay) {
+      safeShutdownOverlay.style.display = "flex";
+      safeShutdownOverlay.onclick = function() {
+        safeShutdownOverlay.style.display = "none";
+        safeShutdownOverlay.onclick = null;
+      };
+    }
+    return;
+  }
+
+  if (mode === "standby") {
+    if (standbyOverlay) {
+      standbyOverlay.style.display = "flex";
+      var wake = function() {
+        standbyOverlay.style.display = "none";
+        document.removeEventListener("mousemove", wake);
+        document.removeEventListener("keydown", wake);
+        alert("welcome back from standby.\n\nnothing changed. u still have slop.");
+      };
+      document.addEventListener("mousemove", wake);
+      document.addEventListener("keydown", wake);
+    }
+    return;
+  }
+
+  if (mode === "logoff") {
+    alert("No other users configured.\n\nu are stuck with yourself forever.");
+  }
+}
+
+// wire up all the buttons once. lazy init gang
+function wireClassicWindows() {
+  if (classicWired) return;
+  classicWired = true;
+
+  var explorerUp = document.getElementById("explorerUp");
+  var explorerBack = document.getElementById("explorerBack");
+  if (explorerUp) {
+    explorerUp.addEventListener("click", function() {
+      if (explorerPath.length > 1) {
+        explorerHistory.push(explorerPath.slice());
+        openExplorerAt(explorerPath.slice(0, -1));
+      } else {
+        playBeep();
+      }
+    });
+  }
+  if (explorerBack) {
+    explorerBack.addEventListener("click", function() {
+      if (explorerHistory.length > 0) {
+        var prev = explorerHistory.pop();
+        openExplorerAt(prev);
+      } else {
+        playBeep();
+        alert("Nowhere to go back to.\n\njust like your ex");
+      }
+    });
+  }
+
+  var recycleEmptyBtn = document.getElementById("recycleEmptyBtn");
+  if (recycleEmptyBtn) {
+    recycleEmptyBtn.addEventListener("click", function() {
+      if (getRecycleBin().length === 0) {
+        alert("Recycle Bin is already empty.");
+        return;
+      }
+      if (confirm("Are you sure you want to permanently delete these " + getRecycleBin().length + " items?\n\n(jk we keep a backup in the cloud)")) {
+        saveRecycleBin([]);
+        renderRecycleBin();
+        // easter egg: emptying bin duplicates a random icon instead
+        if (Math.random() < 0.4) {
+          var keys = Object.keys(iconRegistry);
+          if (keys.length > 0) {
+            var rk = keys[Math.floor(Math.random() * keys.length)];
+            duplicateIcon(iconRegistry[rk].el, iconRegistry[rk].meta);
+            alert("Recycle Bin emptied!\n\n...also something came back. oops.");
+          }
+        }
+      }
+    });
+  }
+
+  var recycleRestoreAllBtn = document.getElementById("recycleRestoreAllBtn");
+  if (recycleRestoreAllBtn) {
+    recycleRestoreAllBtn.addEventListener("click", function() {
+      alert("Restore All is not implemented.\n\nError code: SLOP_NOT_FOUND");
+      playBeep();
+    });
+  }
+
+  if (runInput) {
+    runInput.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") executeRun(runInput.value);
+      if (e.key === "Escape") hideRunDialog();
+    });
+    runInput.addEventListener("input", function() {
+      var hint = document.getElementById("runHint");
+      if (!hint) return;
+      var v = runInput.value.toLowerCase();
+      if (v === "format c:") hint.textContent = "bro dont";
+      else if (v === "rickroll") hint.textContent = "u know what ur doing";
+      else hint.textContent = "";
+    });
+  }
+
+  var runOkBtn = document.getElementById("runOkBtn");
+  var runCancelBtn = document.getElementById("runCancelBtn");
+  var runBrowseBtn = document.getElementById("runBrowseBtn");
+  if (runOkBtn) runOkBtn.addEventListener("click", function() { executeRun(runInput.value); });
+  if (runCancelBtn) runCancelBtn.addEventListener("click", hideRunDialog);
+  if (runBrowseBtn) {
+    runBrowseBtn.addEventListener("click", function() {
+      alert("Browse is not available.\n\nSlopOS knows what u want. trust the process.");
+    });
+  }
+
+  var shutdownOkBtn = document.getElementById("shutdownOkBtn");
+  var shutdownCancelBtn = document.getElementById("shutdownCancelBtn");
+  var shutdownHelpBtn = document.getElementById("shutdownHelpBtn");
+  if (shutdownOkBtn) shutdownOkBtn.addEventListener("click", executeShutdown);
+  if (shutdownCancelBtn) shutdownCancelBtn.addEventListener("click", hideShutdownDialog);
+  if (shutdownHelpBtn) {
+    shutdownHelpBtn.addEventListener("click", function() {
+      alert("Help is not available for Shut Down.\n\nFigure it out.");
+    });
+  }
+
+  // notepad menus that dont menu
+  document.querySelectorAll(".menu-fake").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      var which = btn.dataset.np;
+      if (which === "file") {
+        if (Math.random() < 0.5) {
+          alert("Save failed.\n\nDisk full. (its not. we just felt like it)");
+        } else {
+          if (notepadArea && Math.random() < 0.15) {
+            notepadArea.classList.add("corrupted");
+            notepadArea.value = notepadArea.value.split("").sort(function() {
+              return Math.random() - 0.5;
+            }).join("");
+          }
+          alert("File saved to C:\\Windows\\System32\\important.txt\n\n(totally real location)");
+        }
+      } else if (which === "edit") {
+        if (notepadArea) {
+          notepadArea.value += "\n[edited by slop]";
+        }
+      } else if (which === "search") {
+        alert("Search: function not found");
+      } else if (which === "help") {
+        showClippyAgain();
+      }
+    });
+  });
+
+  updateRecycleBinIconLook();
+}
+
+wireClassicWindows();
+
+
+// ==========================================
+// SCREENSAVER — the bouncing logo that never hits the corner
+// ==========================================
+
+var screensaverEl = document.getElementById("screensaver");
+var saverLogo = document.getElementById("saverLogo");
+var saverIdleMs = 30000; // leave it alone for 30s and it takes over
+var saverIdleTimer = null;
+var saverAnimId = null;
+var saverActive = false;
+
+// pool of colors it cycles through every time it smacks a wall
+var saverColors = ["#00ff66", "#00d9ff", "#ff5eae", "#ffd400", "#a855ff", "#ff6a00"];
+var saverColorIdx = 0;
+
+var saverPos = { x: 120, y: 120, vx: 2.4, vy: 2.0 };
+
+function startSaverIdleTimer() {
+  clearTimeout(saverIdleTimer);
+  saverIdleTimer = setTimeout(showScreensaver, saverIdleMs);
+}
+
+function showScreensaver() {
+  if (saverActive) return;
+  // dont pop it over a bsod or a boot screen, thatd be rude
+  var bsod = document.getElementById("bsodScreen");
+  if (bsod && bsod.style.display !== "none") return;
+
+  saverActive = true;
+  screensaverEl.style.display = "block";
+
+  // start somewhere random so it isnt the same every time
+  saverPos.x = 80 + Math.random() * 200;
+  saverPos.y = 80 + Math.random() * 160;
+  saverPos.vx = Math.random() < 0.5 ? 2.4 : -2.4;
+  saverPos.vy = Math.random() < 0.5 ? 2.0 : -2.0;
+
+  saverStep();
+}
+
+function hideScreensaver() {
+  if (!saverActive) return;
+  saverActive = false;
+  screensaverEl.style.display = "none";
+  cancelAnimationFrame(saverAnimId);
+  startSaverIdleTimer();
+}
+
+function saverStep() {
+  var maxX = window.innerWidth - saverLogo.offsetWidth;
+  var maxY = window.innerHeight - saverLogo.offsetHeight;
+
+  saverPos.x += saverPos.vx;
+  saverPos.y += saverPos.vy;
+
+  var bouncedX = false;
+  var bouncedY = false;
+
+  if (saverPos.x <= 0) { saverPos.x = 0; saverPos.vx *= -1; bouncedX = true; }
+  else if (saverPos.x >= maxX) { saverPos.x = maxX; saverPos.vx *= -1; bouncedX = true; }
+
+  if (saverPos.y <= 0) { saverPos.y = 0; saverPos.vy *= -1; bouncedY = true; }
+  else if (saverPos.y >= maxY) { saverPos.y = maxY; saverPos.vy *= -1; bouncedY = true; }
+
+  // the whole bit: if its about to nail the corner, cheat and nudge it away
+  if (bouncedX && bouncedY) {
+    saverPos.vy += (Math.random() < 0.5 ? 0.9 : -0.9);
+    saverPos.y += saverPos.vy * 3;
+  }
+
+  if (bouncedX || bouncedY) {
+    saverColorIdx = (saverColorIdx + 1) % saverColors.length;
+    saverLogo.style.color = saverColors[saverColorIdx];
+  }
+
+  saverLogo.style.left = saverPos.x + "px";
+  saverLogo.style.top = saverPos.y + "px";
+
+  saverAnimId = requestAnimationFrame(saverStep);
+}
+
+// any sign of life resets the idle clock, and wakes it if its already up
+function pokeActivity() {
+  if (saverActive) {
+    hideScreensaver();
+  } else {
+    startSaverIdleTimer();
+  }
+}
+
+["mousemove", "mousedown", "keydown", "touchstart", "wheel"].forEach(function(evt) {
+  document.addEventListener(evt, pokeActivity, { passive: true });
+});
+
+startSaverIdleTimer();
+
+
+// ==========================================
+// SLOP TASK MANAGER — end the tasks that were never running
+// ==========================================
+
+var taskMgrWin = document.getElementById("taskMgrWin");
+var taskMgrList = document.getElementById("taskMgrList");
+var taskMgrEndBtn = document.getElementById("taskMgrEndBtn");
+var taskMgrSwitchBtn = document.getElementById("taskMgrSwitchBtn");
+var taskMgrNewBtn = document.getElementById("taskMgrNewBtn");
+var taskMgrProcCount = document.getElementById("taskMgrProcCount");
+var taskMgrCpu = document.getElementById("taskMgrCpu");
+var taskMgrMem = document.getElementById("taskMgrMem");
+var taskMgrSelId = null;
+var taskMgrStatTimer = null;
+
+// ghost processes that are always there, doing nothing, forever
+var taskMgrGhosts = [
+  { id: "ghost_slop", name: "slop.exe", status: "Not Responding", hung: true },
+  { id: "ghost_clippy", name: "clippy_daemon.exe", status: "Running", hung: false },
+  { id: "ghost_explorer", name: "explorer.slop", status: "Running", hung: false }
+];
+
+function openTaskManager() {
+  openWindow(taskMgrWin);
+  renderTaskMgr();
+  if (!taskMgrStatTimer) {
+    taskMgrStatTimer = setInterval(tickTaskMgrStats, 1200);
+  }
+}
+
+// collect the real open windows plus the fake processes that never close
+function collectTasks() {
+  var tasks = [];
+  Object.keys(managedWindows).forEach(function(id) {
+    var w = managedWindows[id];
+    // it counts as a task if it has a taskbar button (ie its open somewhere)
+    if (w.taskBtn && id !== "taskMgrWin") {
+      tasks.push({
+        id: id,
+        name: w.title,
+        status: "Running",
+        hung: false,
+        real: true
+      });
+    }
+  });
+  taskMgrGhosts.forEach(function(g) {
+    tasks.push({ id: g.id, name: g.name, status: g.status, hung: g.hung, real: false });
+  });
+  return tasks;
+}
+
+function renderTaskMgr() {
+  var tasks = collectTasks();
+  taskMgrList.innerHTML = "";
+
+  tasks.forEach(function(t) {
+    var row = document.createElement("div");
+    row.className = "taskmgr-row";
+    if (t.hung) row.classList.add("taskmgr-hung");
+    if (t.id === taskMgrSelId) row.classList.add("taskmgr-sel");
+    row.dataset.taskId = t.id;
+
+    var name = document.createElement("span");
+    name.className = "taskmgr-name";
+    name.textContent = t.name;
+
+    var stat = document.createElement("span");
+    stat.className = "taskmgr-stat";
+    stat.textContent = t.status;
+
+    row.appendChild(name);
+    row.appendChild(stat);
+
+    row.addEventListener("click", function() {
+      taskMgrSelId = t.id;
+      renderTaskMgr();
+    });
+
+    taskMgrList.appendChild(row);
+  });
+
+  taskMgrProcCount.textContent = "Processes: " + (tasks.length + 14);
+}
+
+// numbers that mean absolutely nothing but jitter convincingly
+function tickTaskMgrStats() {
+  if (taskMgrWin.style.display === "none") return;
+  var cpu = 40 + Math.floor(Math.random() * 60); // always suspiciously busy
+  taskMgrCpu.textContent = "CPU Usage: " + cpu + "%";
+  var mem = 40 + Math.floor(Math.random() * 600);
+  taskMgrMem.textContent = "Mem: " + mem + "K free";
+  // occasionally re-render so the ghost statuses drift and windows sync up
+  if (Math.random() < 0.4) renderTaskMgr();
+}
+
+taskMgrEndBtn.addEventListener("click", function() {
+  if (!taskMgrSelId) {
+    alert("pick a task first. or dont, i cant end nothing");
+    return;
+  }
+
+  // ending slop.exe is a war crime, the whole thing goes down
+  if (taskMgrSelId === "ghost_slop") {
+    triggerBSOD("ERROR_YOU_ENDED_THE_WRONG_TASK");
+    taskMgrSelId = null;
+    return;
+  }
+
+  // ending a ghost just makes it come back offended
+  var ghost = taskMgrGhosts.filter(function(g) { return g.id === taskMgrSelId; })[0];
+  if (ghost) {
+    alert(ghost.name + " cannot be ended. it lives here now.");
+    ghost.status = "Not Responding";
+    ghost.hung = true;
+    renderTaskMgr();
+    return;
+  }
+
+  // a real window? fine, actually close it
+  var w = managedWindows[taskMgrSelId];
+  if (w) {
+    closeWindow(w.el);
+  }
+  taskMgrSelId = null;
+  renderTaskMgr();
+});
+
+taskMgrSwitchBtn.addEventListener("click", function() {
+  if (!taskMgrSelId) return;
+  var w = managedWindows[taskMgrSelId];
+  if (w && w.taskBtn) {
+    restoreWindow(w.el);
+    bringToFront(w.el);
+    setActiveWin(taskMgrSelId);
+  } else {
+    alert("cannot switch to a task that was never real");
+  }
+});
+
+taskMgrNewBtn.addEventListener("click", function() {
+  showRunDialog();
+});
+
+// ctrl+shift+esc — the actual task manager shortcut the browser will let us keep
+document.addEventListener("keydown", function(e) {
+  if (e.ctrlKey && e.shiftKey && (e.key === "Escape" || e.key === "Esc")) {
+    e.preventDefault();
+    openTaskManager();
+  }
+});
+
+
+// ==========================================
+// SLOP UPDATE NAG — the restart countdown you can only ever postpone
+// ==========================================
+
+var updateNag = document.getElementById("updateNag");
+var updateNagTime = document.getElementById("updateNagTime");
+var updateNagX = document.getElementById("updateNagX");
+var updateNagPostpone = document.getElementById("updateNagPostpone");
+var updateNagNow = document.getElementById("updateNagNow");
+var updateNagSecs = 300; // five whole minutes of freedom
+var updateNagTick = null;
+var updateNagVisible = false;
+
+function fmtNagTime(secs) {
+  var m = Math.floor(secs / 60);
+  var s = secs % 60;
+  return m + ":" + (s < 10 ? "0" : "") + s;
+}
+
+function showUpdateNag() {
+  if (updateNagVisible) return;
+  // dont pop over a crash or the screensaver, let the poor user rest
+  var bsod = document.getElementById("bsodScreen");
+  if (bsod && bsod.style.display !== "none") return;
+  if (saverActive) return;
+
+  updateNagVisible = true;
+  updateNagSecs = 300;
+  updateNagTime.textContent = fmtNagTime(updateNagSecs);
+  updateNag.style.display = "block";
+  playTone(880, 0.14, "sine", 0, 0.07); // the little notification ding
+
+  updateNagTick = setInterval(function() {
+    updateNagSecs--;
+    updateNagTime.textContent = fmtNagTime(updateNagSecs);
+    if (updateNagSecs <= 0) {
+      // time is up. it warned you. it always warned you
+      hideUpdateNag();
+      triggerBSOD("ERROR_UPDATE_INSTALLED_ITSELF_ANYWAY");
+    }
+  }, 1000);
+}
+
+function hideUpdateNag() {
+  updateNagVisible = false;
+  updateNag.style.display = "none";
+  clearInterval(updateNagTick);
+  updateNagTick = null;
+}
+
+// postpone just slaps the clock back to five minutes. forever
+function postponeUpdate() {
+  updateNagSecs = 300;
+  updateNagTime.textContent = fmtNagTime(updateNagSecs);
+  hideUpdateNag();
+  // and it will absolutely come back to bother you again soon
+  scheduleNextNag();
+}
+
+function scheduleNextNag() {
+  // pester again somewhere between 45s and 2 minutes later
+  var delay = 45000 + Math.random() * 75000;
+  setTimeout(showUpdateNag, delay);
+}
+
+updateNagPostpone.addEventListener("click", postponeUpdate);
+
+// the x button pretends to close but really just postpones. classic
+updateNagX.addEventListener("click", postponeUpdate);
+
+updateNagNow.addEventListener("click", function() {
+  hideUpdateNag();
+  triggerBSOD("ERROR_USER_ACTUALLY_CLICKED_RESTART");
+});
+
+// first nag shows up a little while after youre settled in
+setTimeout(showUpdateNag, 40000);
 
